@@ -13,9 +13,10 @@ class BaseParser:
 
     def serialize(self):
         body = struct.pack('<H', self.msg_id) + self.body
-        if self.head == 0xc and self.need_zip:
-            self.head = 0x1c
-        header = struct.pack('<BIBHH', self.head, self.customize, 1, len(body), len(body))
+        head = self.head
+        if head == 0xc and self.need_zip:
+            head = 0x1c
+        header = struct.pack('<BIBHH', head, self.customize, 1, len(body), len(body))
         return header + body
 
     def deserialize(self, data):

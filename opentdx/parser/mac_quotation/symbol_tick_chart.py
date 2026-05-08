@@ -47,5 +47,5 @@ class SymbolTickChart(BaseParser):
             "avg": avg,
             "industry": industry,
             "industry_code": industry_to_board_symbol(industry),
-            "charts": charts
+            "chart_data": charts
         }

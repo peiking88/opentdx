@@ -14,9 +14,27 @@ class TestQuotationClientLogin:
     def test_connected(self, qc):
         assert qc.connected is True
 
+    def test_login_show_info(self, qc):
+        result = qc.login(show_info=True)
+        assert result is True
+
+    def test_get_text_file(self, qc):
+        result = qc.get_text_file('gpcw2026.zip')
+        assert isinstance(result, list)
+
     def test_heartbeat(self, qc):
         result = qc.doHeartBeat()
         assert result is not None
+
+    def test_download_file(self, qc):
+        result = qc.download_file('gpcw2026.zip', filesize=100)
+        if result is not None:
+            assert isinstance(result, bytearray)
+
+    def test_get_traffic_stats(self, qc):
+        result = qc.get_traffic_stats()
+        assert isinstance(result, dict)
+        assert "send_pkg_num" in result
 
 
 class TestQuotationClientStock:
@@ -42,13 +60,16 @@ class TestQuotationClientStock:
         result = qc.get_kline(MARKET.SH, '000001', PERIOD.DAILY, count=10)
         assert isinstance(result, list)
         assert len(result) > 0
+        assert result[0]['open'] > 0, f"开盘价应>0: {result[0]['open']}"
+        assert result[0]['close'] > 0, f"收盘价应>0: {result[0]['close']}"
         assert 'datetime' in result[0]
 
     def test_get_quotes(self, qc):
         result = qc.get_quotes(MARKET.SZ, '000001')
         assert isinstance(result, list)
         assert len(result) > 0
-        assert 'code' in result[0]
+        assert result[0]['code'] == '000001'
+        assert result[0]['close'] > 0, f"现价应>0: {result[0]['close']}"
 
     def test_get_quotes_multi(self, qc):
         result = qc.get_quotes([(MARKET.SZ, '000001'), (MARKET.SH, '600000')])

@@ -14,6 +14,8 @@ from opentdx.parser.ex_quotation.table_detail import TableDetail
 from opentdx.parser.ex_quotation.table import Table 
 from opentdx.parser.ex_quotation.tick_chart import TickChart 
 from opentdx.parser.ex_quotation.file import Download as FileDownload, Meta as FileMeta
+from opentdx.parser.ex_quotation.history_bars_range import HistoryInstrumentBarsRange
+from opentdx.parser.ex_quotation.instrument_info import InstrumentInfo
 from opentdx.parser.ex_quotation.server import Login, Info as ServerInfo
 
 __all__ = [
@@ -34,6 +36,8 @@ __all__ = [
     'TickChart',
     'FileDownload',
     'FileMeta',
+    'HistoryInstrumentBarsRange',
+    'InstrumentInfo',
     'Login',
     'ServerInfo',
 ]

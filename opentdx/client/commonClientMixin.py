@@ -1,7 +1,7 @@
 import pandas as pd
 
 from datetime import date
-from .baseStockClient import update_last_ack_time
+from .baseStockClient import update_last_ack_time, _paginate
 from opentdx.const import ADJUST, BOARD_TYPE, CATEGORY, EX_CATEGORY, EX_MARKET, MARKET, PERIOD, EX_BOARD_TYPE, SORT_TYPE, SORT_ORDER, mac_hosts, mac_ex_hosts
 from opentdx.parser.mac_quotation import BoardList, BoardMembersQuotes, SymbolBar, SymbolBelongBoard, SymbolCapitalFlow,SymbolTickChart, SymbolQuotes, SymbolTransaction
 from opentdx.utils.log import log
@@ -62,26 +62,10 @@ class CommonClientMixin:
     @require_sp_mode
     @update_last_ack_time
     def get_board_list(self, market: BOARD_TYPE | EX_BOARD_TYPE, count=10000):
-        MAX_LIST_COUNT = 150
-        security_list = []
-        page_size = min(count, MAX_LIST_COUNT)
-        
-        msg = f"TDX 板块列表：{market} 查询总量{count}"
-        log.debug(msg)
-        
-        for start in range(0, count, page_size):
-            current_count = min(page_size, count - start)
-            part = self.call(BoardList(board_type=market, start=start, page_size=current_count))
-            items = part["items"]
-
-            if len(items) > 0:
-                security_list.extend(items)
-
-            if len(items) < current_count:
-                log.debug(f"{msg} 数据量不足，获取结束")
-                break
-                
-        return security_list
+        return _paginate(
+            lambda s, c: self.call(BoardList(board_type=market, start=s, page_size=c))["items"],
+            150, count,
+        )
 
     @require_sp_mode
     @update_last_ack_time
@@ -163,25 +147,14 @@ class CommonClientMixin:
                 * get_board_members: 返回基本信息列表
                 * get_board_members_quotes: 返回带实时行情的完整数据
         """
-        MAX_LIST_COUNT = 80
-        security_list = []
-        msg = f"TDX 板块成分报价：{board_symbol} 查询总量{count}"
-        log.debug(msg)
-
-        for start in range(0, count, MAX_LIST_COUNT):
-            current_count = min(MAX_LIST_COUNT, count - start)
-            rs = self.call(BoardMembersQuotes(board_symbol=board_symbol, start=start, page_size=current_count, sort_type=sort_type, sort_order=sort_order, fields=fields if fields else PresetField.COMMON))
-            part = rs["stocks"]
-            
-            if len(part) > 0:
-                security_list.extend(part)
-            
-            if len(part) < current_count:
-                log.debug(f"{msg} 数据量不足，获取结束")
-                break
-                
-                
-        return security_list
+        return _paginate(
+            lambda s, c: self.call(BoardMembersQuotes(
+                board_symbol=board_symbol, start=s, page_size=c,
+                sort_type=sort_type, sort_order=sort_order,
+                fields=fields if fields else PresetField.COMMON,
+            ))["stocks"],
+            80, count,
+        )
 
     @require_sp_mode
     @update_last_ack_time
@@ -259,25 +232,13 @@ class CommonClientMixin:
             - 当返回的数据量小于请求数量时，会自动停止分页
             - 如果板块不存在或无成分股，返回空列表
         """
-        MAX_LIST_COUNT = 80
-        security_list = []
-        
-        msg = f"TDX 板块成员：{board_symbol} 查询总量{count}"
-        log.debug(msg)
-        
-        for start in range(0, count, MAX_LIST_COUNT):
-            current_count = min(MAX_LIST_COUNT, count - start)
-            rs = self.call(BoardMembersQuotes(board_symbol=board_symbol, start=start, page_size=current_count, sort_type=sort_type, sort_order=sort_order))
-            part = rs["stocks"]
-            
-            if len(part) > 0:
-                security_list.extend(part)
-            
-            if len(part) < current_count:
-                log.debug(f"{msg} 数据量不足，获取结束")
-                break
-
-        return security_list
+        return _paginate(
+            lambda s, c: self.call(BoardMembersQuotes(
+                board_symbol=board_symbol, start=s, page_size=c,
+                sort_type=sort_type, sort_order=sort_order,
+            ))["stocks"],
+            80, count,
+        )
     
     @require_sp_mode
     @update_last_ack_time
@@ -411,31 +372,13 @@ class CommonClientMixin:
             - 对于大数量请求，会自动分页处理以提高效率
             - 支持A股、港股、美股等多个市场的K线数据获取
         """
-        MAX_LIST_COUNT = 700
-        page_size = min(count, MAX_LIST_COUNT)
-        security_list = []
-        start = 0
-
-        msg = f"TDX bar :{market} {code} {period} 查询总量{count} {start}  "
-        log.debug(msg)
-
-        for start in range(0, count, page_size):
-            # 计算本次请求的实际数量，最后一次根据剩余数据减少
-            current_count = min(page_size, count - start)
-
-            parser = SymbolBar(market=market, code=code, period=period, times=times, start=start, count=current_count, fq=fq)
-            result = self.call(parser)
-
-            part = result.get('bars', [])
-
-            if len(part) > 0:
-                security_list.extend(part)
-
-            if len(part) < current_count:
-                log.debug(f"{msg} 数据量不足,获取结束")
-                break
-
-        return security_list
+        return _paginate(
+            lambda s, c: self.call(SymbolBar(
+                market=market, code=code, period=period, times=times,
+                start=s, count=c, fq=fq,
+            )).get('charts', []),
+            700, count,
+        )
     
     @require_sp_mode    
     @update_last_ack_time
@@ -615,30 +558,9 @@ class CommonClientMixin:
             - bs_flag 字段标识买卖方向，可用于分析资金流向
             - 如果股票代码不存在或无成交数据，返回空列表
         """
-        MAX_TRANSACTION_COUNT = 1000
-        transaction_list = []
-        
-        msg = f"TDX 逐笔成交：{market.name}.{code} 查询总量{count}"
-        log.debug(msg)
-        
-        for current_start in range(start, start + count, MAX_TRANSACTION_COUNT):
-            current_count = min(MAX_TRANSACTION_COUNT, start + count - current_start)
-            parser = SymbolTransaction(
-                market=market, 
-                code=code, 
-                count=current_count, 
-                start=current_start, 
-                query_date=query_date
-            )
-            result = self.call(parser)
-            
-            part = result.get('transactions', [])
-            
-            if len(part) > 0:
-                transaction_list.extend(part)
-            
-            if len(part) < current_count:
-                log.debug(f"{msg} 数据量不足，获取结束")
-                break
-
-        return transaction_list
+        return _paginate(
+            lambda s, c: self.call(SymbolTransaction(
+                market=market, code=code, count=c, start=s, query_date=query_date,
+            )).get('transactions', []),
+            1000, count, start,
+        )

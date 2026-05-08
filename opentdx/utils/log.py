@@ -21,3 +21,5 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 # add formatter to ch
 ch.setFormatter(formatter)
 log.addHandler(ch)
+
+logger = log

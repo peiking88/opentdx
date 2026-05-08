@@ -88,7 +88,7 @@ class DefaultRetryStrategy():
 
 class BaseStockClient():
     hosts = []
-    def __init__(self, multithread=False, heartbeat=False, auto_retry=False, raise_exception=False): 
+    def __init__(self, multithread=False, heartbeat=False, auto_retry=False, raise_exception=False):
 
         self.client = None
         self.ip = None
@@ -109,6 +109,16 @@ class BaseStockClient():
         self.retry_strategy = DefaultRetryStrategy()
         # 是否在函数调用出错的时候抛出异常
         self.raise_exception = raise_exception
+
+        # 流量统计
+        self._traffic_stats = {
+            'send_pkg_num': 0,
+            'recv_pkg_num': 0,
+            'send_bytes_per_second': 0.0,
+            'recv_bytes_per_second': 0.0,
+            'last_send_time': 0.0,
+            'last_recv_time': 0.0,
+        }
 
     def call(self, parser: BaseParser):
         resp = self.send(parser.serialize())
@@ -246,6 +256,10 @@ class BaseStockClient():
         else:
             return self._send(data)
 
+    def get_traffic_stats(self) -> dict:
+        """获取流量统计（tdxpy 兼容）"""
+        return dict(self._traffic_stats)
+
     def _send(self, data):
         """
         发送数据
@@ -264,13 +278,23 @@ class BaseStockClient():
             zipped, customize, control, zipsize, unzip_size, msg_id = struct.unpack('<BIBHHH', data[:12])
             # log.debug("sending data: zipped: %s, customize: %s, control: %s, zipsize: %d, unzip_size: %d, msg_id: %s" % (hex(zipped), hex(customize), hex(control), zipsize, unzip_size, hex(msg_id)))
             send_data = self.client.send(data)
+            now = time.time()
+            self._traffic_stats['send_pkg_num'] += 1
+            self._traffic_stats['send_bytes_per_second'] = send_data / (now - self._traffic_stats['last_send_time']) \
+                if self._traffic_stats['last_send_time'] else 0.0
+            self._traffic_stats['last_send_time'] = now
             if send_data != len(data):
                 log.debug("send data error")
                 if self.raise_exception:
                     raise Exception("send data error")
             else:
                 head_buf = self.client.recv(RSP_HEADER_LEN)
-                
+                now = time.time()
+                self._traffic_stats['recv_pkg_num'] += 1
+                self._traffic_stats['recv_bytes_per_second'] = RSP_HEADER_LEN / (now - self._traffic_stats['last_recv_time']) \
+                    if self._traffic_stats['last_recv_time'] else 0.0
+                self._traffic_stats['last_recv_time'] = now
+
                 # prefix: b1 cb 74 00 固定响应头
                 prefix, zipped, customize, unknown, msg_id, zipsize, unzip_size = struct.unpack('<IBIBHHH', head_buf)
                 # log.debug("recv Header: zipped: %s, customize: %s, control: %s, msg_id: %s, zipsize: %d, unzip_size: %d" % (hex(zipped), hex(customize), hex(unknown), hex(msg_id), zipsize, unzip_size))

@@ -326,7 +326,7 @@ class TestMacQuotationClientTickChart:
         
         # 验证基本信息正确性
         assert result['code'] == '000001', f"股票代码错误: {result['code']}"
-        assert result['market'] == MARKET.SZ.value, f"市场代码错误: {result['market']}"
+        assert result['market'] == MARKET.SZ, f"市场代码错误: {result['market']}"
         assert isinstance(result['name'], str) and len(result['name']) > 0, "股票名称不能为空"
         
         # 验证价格字段合理性
@@ -369,7 +369,7 @@ class TestMacQuotationClientTickChart:
         
         # 验证基本信息
         assert result['code'] == '600000', f"股票代码错误: {result['code']}"
-        assert result['market'] == MARKET.SH.value, f"市场代码错误: {result['market']}"
+        assert result['market'] == MARKET.SH, f"市场代码错误: {result['market']}"
         
         # 验证时间字段（历史数据应该有具体的时间戳）
         assert result['time'] is not None, "历史数据的时间戳不应为None"
@@ -443,7 +443,7 @@ class TestMacQuotationClientTickChart:
             
             # 验证基本信息
             assert result['code'] == '00700', f"港股代码错误: {result['code']}"
-            assert result['market'] == EX_MARKET.HK_MAIN_BOARD.value, \
+            assert result['market'] == EX_MARKET.HK_MAIN_BOARD, \
                 f"港股市场代码错误: {result['market']}"
             
             # 验证时间字段

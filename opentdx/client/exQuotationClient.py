@@ -102,5 +102,27 @@ class exQuotationClient(BaseStockClient, CommonClientMixin):
         return self.call(ex_quotation.ChartSampling(market, code))
 
     @update_last_ack_time
+    def get_history_instrument_bars_range(self, market: EX_MARKET, code: str, start_date: int, end_date: int) -> list[dict]:
+        """按日期范围获取扩展市场K线（tdxpy 兼容）
+
+        Args:
+            market: 扩展市场类型
+            code: 商品代码
+            start_date: 起始日期 (YYYYMMDD)
+            end_date: 结束日期 (YYYYMMDD)
+        """
+        return self.call(ex_quotation.HistoryInstrumentBarsRange(market.value, code, start_date, end_date))
+
+    @update_last_ack_time
+    def get_instrument_info(self, start: int = 0, count: int = 100) -> list[dict]:
+        """获取扩展市场商品信息列表（tdxpy 兼容）
+
+        Args:
+            start: 起始位置
+            count: 获取数量
+        """
+        return self.call(ex_quotation.InstrumentInfo(start, count))
+
+    @update_last_ack_time
     def download_file(self, filename: str, filesize=0, report_hook=None):
         return super().download_file(ex_quotation.FileDownload, filename, filesize, report_hook)
