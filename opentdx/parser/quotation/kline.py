@@ -39,17 +39,20 @@ class K_Line(BaseParser):
 
             upCount = 0
             downCount = 0
-            # 智能检测：试探后续 4 字节是否为下一行日期，否则为 upCount/downCount
+            # 智能检测：试探后续 4 字节是否为 upCount/downCount 还是下一行日期
+            # upCount/downCount 为小整数，无法构成有效 YYYYMMDD
             if pos + 4 <= data_len:
-                try:
-                    try_date, = struct.unpack('<I', data[pos: pos + 4])
-                    try_date_time = to_datetime(try_date, minute_category)
-                    if try_date_time.year < date_time.year:
-                        raise ValueError()
-                except (ValueError, struct.error):
+                try_date, = struct.unpack('<I', data[pos: pos + 4])
+                y, m, d = try_date // 10000, (try_date % 10000) // 100, try_date % 100
+                if y < 1990 or m < 1 or m > 12 or d < 1 or d > 31:
                     upCount, downCount = struct.unpack('<HH', data[pos: pos + 4])
                     pos += 4
-            
+                else:
+                    try_date_time = to_datetime(try_date, minute_category)
+                    if try_date_time <= date_time:
+                        upCount, downCount = struct.unpack('<HH', data[pos: pos + 4])
+                        pos += 4
+
             bar = {
                 'datetime': date_time,
                 'open': open,
