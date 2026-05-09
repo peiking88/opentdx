@@ -1,4 +1,8 @@
-"""Mock 测试 — 用构造的二进制数据测试解析器的反序列化逻辑，无需服务器连接"""
+"""Parser 单元测试 — 用构造的二进制数据测试解析器反序列化逻辑，无需服务器连接。
+
+本文件测试边界条件和数据格式解析的正确性，与真实服务端集成测试互补。
+真实服务端往返测试见 test_quotation_client.py / test_ex_quotation_client.py / test_mac_quotation_client.py
+"""
 import struct
 from datetime import date, time
 

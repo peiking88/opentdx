@@ -37,15 +37,9 @@ class K_Line(BaseParser):
 
             upCount = 0
             downCount = 0
-            if pos < data_len:
-                try:
-                    try_date, = struct.unpack('<I', data[pos: pos + 4])
-                    try_date_time = to_datetime(try_date, minute_category)
-                    if try_date_time.year < date_time.year:
-                        raise ValueError()
-                except ValueError:
-                    upCount, downCount = struct.unpack('<HH', data[pos: pos + 4])
-                    pos += 4
+            if pos + 4 <= data_len:
+                upCount, downCount = struct.unpack('<HH', data[pos: pos + 4])
+                pos += 4
             
             bar = {
                 'datetime': date_time,

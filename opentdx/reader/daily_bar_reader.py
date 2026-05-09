@@ -58,7 +58,7 @@ class TdxDailyBarReader(BaseReader):
         security_type = self.get_security_type(filename)
 
         if security_type not in self.SECURITY_TYPE:
-            logger.exception("Unknown security type !\n")
+            logger.error("未知证券类型, filename=%s", filename)
             raise NotImplementedError
 
         coefficient = self.SECURITY_COEFFICIENT[security_type]

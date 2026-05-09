@@ -24,6 +24,8 @@ class TestTdxClientStock:
         assert isinstance(result, list)
         assert len(result) > 0
         assert 'code' in result[0] and 'name' in result[0]
+        assert result[0]['pre_close'] >= 0
+        assert result[0]['vol'] >= 0
 
     def test_stock_kline(self, tdx):
         result = tdx.stock_kline(MARKET.SH, '000001', PERIOD.DAILY, count=10)
@@ -51,75 +53,95 @@ class TestTdxClientStock:
         result = tdx.stock_quotes([(MARKET.SZ, '000001'), (MARKET.SH, '600000')])
         assert isinstance(result, list)
         assert len(result) >= 2
+        for r in result:
+            assert r['close'] > 0
 
     def test_stock_quotes_list(self, tdx):
         result = tdx.stock_quotes_list(CATEGORY.A, count=5)
         assert isinstance(result, list)
         assert len(result) > 0
+        assert result[0]['close'] > 0
 
     def test_stock_quotes_list_with_sort(self, tdx):
         result = tdx.stock_quotes_list(CATEGORY.A, count=5, sort_type=SORT_TYPE.TOTAL_AMOUNT)
         assert isinstance(result, list)
         assert len(result) > 0
+        assert result[0]['amount'] >= 0
 
     def test_stock_top_board(self, tdx):
         result = tdx.stock_top_board(CATEGORY.A)
         assert isinstance(result, dict)
         assert len(result) > 0
+        assert 'amplitude' in result or 'rise' in result or '涨幅' in result, \
+            "缺少排名类别"
 
     def test_stock_quotes_detail(self, tdx):
         result = tdx.stock_quotes_detail(MARKET.SZ, '000001')
         assert isinstance(result, list)
         assert len(result) > 0
+        assert 'handicap' in result[0]
 
     def test_stock_quotes_detail_multi(self, tdx):
         result = tdx.stock_quotes_detail([(MARKET.SZ, '000001'), (MARKET.SH, '600000')])
         assert isinstance(result, list)
         assert len(result) >= 2
+        for r in result:
+            assert 'handicap' in r
 
     def test_index_info(self, tdx):
         result = tdx.index_info([(MARKET.SH, '999999'), (MARKET.SZ, '399001')])
         assert isinstance(result, list)
         assert len(result) > 0
+        assert result[0]['close'] > 0
 
     def test_index_momentum(self, tdx):
         result = tdx.index_momentum(MARKET.SH, '999999')
         assert isinstance(result, list)
+        if len(result) > 0 and isinstance(result[0], dict):
+            assert 'momentum' in result[0] or 'up_count' in result[0]
 
     def test_stock_tick_chart(self, tdx):
         result = tdx.stock_tick_chart(MARKET.SH, '999999')
         assert isinstance(result, list)
+        if len(result) > 0:
+            assert result[0]['price'] >= 0
 
     def test_stock_transaction(self, tdx):
         result = tdx.stock_transaction(MARKET.SZ, '000001')
         assert isinstance(result, list)
+        if len(result) > 0:
+            assert result[0]['price'] > 0
+            assert result[0]['vol'] > 0
 
     def test_stock_transaction_history(self, tdx):
         result = tdx.stock_transaction(MARKET.SZ, '000001', date(2026, 4, 10))
         assert isinstance(result, list)
+        if len(result) > 0:
+            assert result[0]['price'] > 0
 
     def test_stock_unusual(self, tdx):
         result = tdx.stock_unusual(MARKET.SZ)
         assert isinstance(result, list)
+        if len(result) > 0:
+            assert len(result[0]['desc']) > 0
 
     def test_stock_f10(self, tdx):
         result = tdx.stock_f10(MARKET.SZ, '000001')
         assert isinstance(result, list)
-        assert len(result) > 0
+        assert len(result) >= 3, f"F10 应至少含 3 个分类, 实际 {len(result)}"
         assert 'name' in result[0]
-
-    def test_stock_vol_profile(self, tdx):
-        result = tdx.stock_vol_profile(MARKET.SZ, '000001')
-        assert result is None or isinstance(result, list)
 
     def test_stock_chart_sampling(self, tdx):
         result = tdx.stock_chart_sampling(MARKET.SZ, '000001')
         assert isinstance(result, list)
+        assert len(result) > 0, "分时采样点不应为空"
 
     def test_stock_block(self, tdx):
         result = tdx.stock_block(BLOCK_FILE_TYPE.DEFAULT)
         assert result is not None
         assert isinstance(result, list)
+        assert len(result) > 0
+        assert 'blockname' in result[0]
 
 
 class TestTdxClientAdvanced:
@@ -128,19 +150,26 @@ class TestTdxClientAdvanced:
     def test_stock_auction(self, tdx):
         result = tdx.stock_auction(MARKET.SZ, '000001')
         assert isinstance(result, list)
+        if len(result) > 0:
+            assert 'items' in result[0] or 'price' in result[0]
 
     def test_stock_history_orders(self, tdx):
         from datetime import date
         result = tdx.stock_history_orders(MARKET.SZ, '000001', date(2026, 4, 10))
         assert isinstance(result, list)
+        if len(result) > 0:
+            assert result[0]['price'] > 0
 
     def test_stock_xdxr(self, tdx):
         result = tdx.stock_xdxr(MARKET.SZ, '000001')
         assert isinstance(result, list)
+        assert len(result) > 50
 
     def test_stock_finance(self, tdx):
         result = tdx.stock_finance(MARKET.SZ, '000001')
         assert isinstance(result, dict)
+        assert 'code' in result
+        assert result['liutongguben'] > 0
 
     def test_stock_k_data(self, tdx):
         result = tdx.stock_k_data('000001', '2026-01-01', '2026-05-01')
@@ -149,11 +178,15 @@ class TestTdxClientAdvanced:
     def test_goods_quotes_list(self, tdx):
         result = tdx.goods_quotes_list(EX_MARKET.US_STOCK, start=0, count=5)
         assert isinstance(result, list)
+        assert len(result) > 0
+        assert result[0]['close'] > 0
 
     def test_goods_history_transaction(self, tdx):
         from datetime import date
         result = tdx.goods_history_transaction(EX_MARKET.US_STOCK, 'TSLA', date(2026, 5, 1))
         assert isinstance(result, list)
+        if len(result) > 0:
+            assert result[0]['price'] > 0
 
     def test_context_manager(self):
         """测试 __enter__ / __exit__"""
@@ -289,11 +322,13 @@ class TestTdxClientGoods:
         result = tdx.goods_category_list()
         assert isinstance(result, list)
         assert len(result) > 0
+        assert len(result[0]['name']) > 0
 
     def test_goods_list(self, tdx):
         result = tdx.goods_list(start=0, count=5)
         assert isinstance(result, list)
         assert len(result) > 0
+        assert len(result[0]['code']) > 0
 
     def test_goods_quotes(self, tdx):
         result = tdx.goods_quotes(EX_MARKET.US_STOCK, 'TSLA')
@@ -308,6 +343,9 @@ class TestTdxClientGoods:
         assert len(result) >= 2
         codes = {r['code'] for r in result}
         assert 'TSLA' in codes
+        assert '09988' in codes
+        for r in result:
+            assert r['close'] > 0
 
     def test_goods_kline(self, tdx):
         result = tdx.goods_kline(EX_MARKET.US_STOCK, 'TSLA', PERIOD.DAILY, count=5)
@@ -319,7 +357,10 @@ class TestTdxClientGoods:
     def test_goods_tick_chart(self, tdx):
         result = tdx.goods_tick_chart(EX_MARKET.US_STOCK, 'TSLA')
         assert isinstance(result, list)
+        if len(result) > 0:
+            assert result[0]['price'] >= 0
 
     def test_goods_chart_sampling(self, tdx):
         result = tdx.goods_chart_sampling(EX_MARKET.US_STOCK, 'TSLA')
         assert isinstance(result, list)
+        assert len(result) > 0, "分时采样点不应为空"

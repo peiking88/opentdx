@@ -180,3 +180,22 @@ opentdx doc    # 交互式API演示
  pyproject.toml                             |  2 +-
  summary.md                                 | 24 +++++++++++---
 ```
+
+### 2026-05-10 00:19:11
+```
+ opentdx/client/baseStockClient.py             |  27 +-
+ opentdx/exceptions.py                         |  13 +-
+ opentdx/parser/mac_quotation/symbol_quotes.py |   8 +-
+ opentdx/parser/quotation/company_info.py      |   6 +-
+ opentdx/parser/quotation/kline.py             |  12 +-
+ opentdx/reader/daily_bar_reader.py            |   2 +-
+ opentdx/utils/help.py                         |   6 +-
+ opentdx/utils/helper.py                       |  14 +-
+ pyproject.toml                                |   2 +-
+ summary.md                                    |  20 +-
+ tests/test_error_paths.py                     |  71 +++++
+ tests/test_ex_quotation_client.py             |  51 +++-
+ tests/test_mac_quotation_client.py            |  99 +++++--
+ tests/test_mock_client.py                     | 370 --------------------------
+ tests/{test_parser_mock.py => test_parser.py} |   6 +-
+```

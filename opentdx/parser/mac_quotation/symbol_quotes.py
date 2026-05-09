@@ -35,8 +35,8 @@ class SymbolQuotes(BaseParser):
             # 目前MARKET 为 0 , 1, 2 
             try:
                 market = MARKET(market) if market <= 3 else EX_MARKET(market)
-            except Exception:
-                log.error(f"解析市场信息出错: market={market}")
+            except ValueError:
+                log.warning(f"未知市场代码: market={market}")
                 market = EX_MARKET.TEMP_STOCK
 
             stock_dict = {
@@ -55,8 +55,8 @@ class SymbolQuotes(BaseParser):
                         if field_name.startswith("unknown_") and field_format == '<f' and value != 0.0 and abs(value) < 1e-6:
                             try:
                                 value, = struct.unpack('<i', value_bytes)
-                            except Exception:
-                                pass
+                            except struct.error:
+                                log.debug("未知字段 %s 无法以 int 格式解析, value_bytes=%r", field_name, value_bytes)
                         stock_dict[field_name] = value
                         index += 1
 

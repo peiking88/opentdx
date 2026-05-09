@@ -3,6 +3,7 @@ from typing import override
 from opentdx.const import MARKET
 from opentdx.parser.baseParser import BaseParser, register_parser
 from opentdx.utils.help import to_datetime
+from opentdx.utils.log import logger
 
 @register_parser(0x2cf)
 class Category(BaseParser):
@@ -21,8 +22,9 @@ class Category(BaseParser):
                 raw_bytes = raw_bytes[:pos]
             try:
                 return raw_bytes.decode('gbk')
-            except Exception:
-                return 'unknown str'
+            except UnicodeDecodeError:
+                logger.warning("GBK 解码失败, 原始字节: %r", raw_bytes[:20])
+                return raw_bytes.decode('gbk', errors='replace')
 
 
         categories = []

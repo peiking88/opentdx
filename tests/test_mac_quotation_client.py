@@ -87,15 +87,19 @@ class TestMacQuotationClientBoard:
         result = mqc.get_board_list(BOARD_TYPE.HY, count=5)
         assert isinstance(result, list)
         assert len(result) > 0
-        
+        assert len(result[0]['name']) > 0, "板块名称不应为空"
+
     def test_ex_get_board_list(self, meqc):
         result = meqc.get_board_list(EX_BOARD_TYPE.HK_ALL, count=5)
         assert isinstance(result, list)
         assert len(result) > 0
+        assert len(result[0]['name']) > 0
 
     def test_get_board_members_quotes(self, mqc):
         result = mqc.get_board_members_quotes('880761', count=5)
         assert isinstance(result, list)
+        assert len(result) > 0
+        assert result[0]['close'] >= 0
 
     def test_get_board_members(self, mqc):
         # 普通板块
@@ -123,11 +127,13 @@ class TestMacQuotationClientBoard:
         result = meqc.get_board_members('HK0287', count=5)
         assert isinstance(result, list)
         assert len(result) > 0
-        
+        assert len(str(result[0].get('code', result[0].get('symbol', '')))) > 0
+
     def test_get_board_members_usboard(self, meqc):
         result = meqc.get_board_members('US0495', count=5)
         assert isinstance(result, list)
         assert len(result) > 0
+        assert len(str(result[0].get('code', result[0].get('symbol', '')))) > 0
 
     def test_get_board_members_with_sort_type(self, mqc):
         """测试 sort_type 和 sort_order 参数是否生效"""
@@ -187,11 +193,14 @@ class TestMacQuotationClientBoard:
         result = mqc.get_symbol_bars(MARKET.SZ, '000100', PERIOD.DAILY, count=5)
         assert isinstance(result, list)
         assert len(result) > 0
+        assert result[0]['open'] > 0
+        assert result[0]['close'] > 0
 
     def test_get_symbol_bars_with_adjust(self, mqc):
         result = mqc.get_symbol_bars(MARKET.SZ, '000100', PERIOD.DAILY, count=5, fq=ADJUST.QFQ)
         assert isinstance(result, list)
         assert len(result) > 0
+        assert result[0]['close'] > 0
 
     def test_get_board_list_ex_board_type(self, mqc):
         result = mqc.get_board_list(EX_BOARD_TYPE.HK_ALL, count=5)
@@ -493,36 +502,47 @@ class TestMacQuotationClientSymbolQuotes:
     """分时图 API - 真实请求测试"""
 
     def test_get_symbol_quotes(self, mqc:macQuotationClient):
-        """测试A股的股票信息"""
+        """测试A股的股票信息 — 验证关键字段值"""
         code_list = [
             (MARKET.SZ, '000001'),
             (MARKET.SH, '688808'),
-            (MARKET.SZ, '000999')
-            
+            (MARKET.SZ, '000999'),
         ]
-        print(code_list)
         result = mqc.get_symbol_quotes(code_list)
-        df = pd.DataFrame(result['stocks'])
-        print(result['stocks'])
-        
+        assert isinstance(result, dict)
+        assert 'stocks' in result
+        stocks = result['stocks']
+        assert len(stocks) >= len(code_list)
+        codes = {s['symbol'] for s in stocks}
+        for _, expected_code in code_list:
+            assert expected_code in codes, f"缺少 {expected_code}"
+        for s in stocks:
+            assert len(s['name']) > 0, f"name 为空"
+            assert s['close'] >= 0, f"close < 0: {s['close']}"
+            assert s['high'] >= s['low'], f"high < low: {s['high']} < {s['low']}"
+
     def test_get_ex_symbol_quotes(self, meqc:macQuotationClient):
-        """测试EX的股票信息"""
+        """测试EX的股票信息 — 验证关键字段值"""
+        # 美股
         code_list = [
             (EX_MARKET.US_STOCK, 'BOIL'),
             (EX_MARKET.US_STOCK, 'KOLD'),
         ]
-        print(code_list)
         result = meqc.get_symbol_quotes(code_list)
-        df = pd.DataFrame(result['stocks'])
-        print(result['stocks'])
-        
-        code_list = [
-            (EX_MARKET.HK_MAIN_BOARD, '00700'),
-        ]
-        print(code_list)
-        result = meqc.get_symbol_quotes(code_list)
-        df = pd.DataFrame(result['stocks'])
-        print(result['stocks'])
+        assert isinstance(result, dict)
+        stocks = result['stocks']
+        assert len(stocks) >= len(code_list)
+        for s in stocks:
+            assert len(s['symbol']) > 0
+            assert s['close'] >= 0
+
+        # 港股
+        hk_code_list = [(EX_MARKET.HK_MAIN_BOARD, '00700')]
+        result = meqc.get_symbol_quotes(hk_code_list)
+        stocks = result['stocks']
+        assert len(stocks) >= 1
+        assert stocks[0]['symbol'] == '00700'
+        assert stocks[0]['close'] >= 0
         
     def test_get_symbol_quotes_with_basic_fields(self, mqc:macQuotationClient):
         """测试使用 basic 字段预设获取股票行情"""
@@ -902,3 +922,40 @@ class TestMacQuotationClientSymbolTransaction:
                 f"价格波动过大: {price_range_pct:.2f}% (min={min_price}, max={max_price})"
         
         print(f"价格范围测试通过: min={min_price:.2f}, max={max_price:.2f}, 波动={price_range_pct:.2f}%")
+
+
+class TestMacFileQueryReal:
+    """SP 文件查询解析器 — 真实服务端测试"""
+
+    def test_file_list(self, mqc):
+        """测试文件列表解析器 (FileList, msg_id=0x1215)"""
+        from opentdx.parser.mac_quotation.file_query import FileList
+        result = mqc.call(FileList('gpcw2026.zip', 0))
+        if result is not None:
+            assert isinstance(result, dict)
+            assert 'size' in result
+            assert 'hash' in result
+
+    def test_file_download(self, mqc):
+        """测试文件下载解析器 (FileDownload, msg_id=0x1217)"""
+        from opentdx.parser.mac_quotation.file_query import FileDownload
+        result = mqc.call(FileDownload('gpcw2026.zip', 1, 0, 4096))
+        if result is not None:
+            assert isinstance(result, dict)
+            assert 'content' in result
+            assert isinstance(result['content'], str)
+
+
+class TestMacSymbolInfoReal:
+    """SP 品种信息 — 真实服务端测试"""
+
+    def test_symbol_info(self, mqc):
+        """测试品种信息解析器 (SymbolInfo, msg_id=0x1230)"""
+        from opentdx.parser.mac_quotation.symbol_info import SymbolInfo
+        result = mqc.call(SymbolInfo(MARKET.SH, '600000'))
+        assert result is not None
+        assert isinstance(result, dict)
+        assert result['code'] == '600000'
+        assert isinstance(result['name'], str)
+        assert len(result['name']) > 0
+        assert result['pre_close'] > 0

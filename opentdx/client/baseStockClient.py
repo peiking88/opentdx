@@ -125,8 +125,15 @@ class BaseStockClient():
         resp = self.send(parser.serialize())
         if resp is None:
             return None
-        else:
+        try:
             return parser.deserialize(resp)
+        except (struct.error, IndexError, ValueError) as e:
+            log.error(f"解析 {parser.__class__.__name__}(0x{parser.msg_id:04X}) 响应失败", exc_info=True)
+            if self.raise_exception:
+                raise TdxFunctionCallError(
+                    f"解析 {parser.__class__.__name__}(0x{parser.msg_id:04X}) 响应失败"
+                ) from e
+            return None
 
     def connect(self, ip=None, port=7709, time_out=5, bind_port=None, bind_ip='0.0.0.0'):
         if ip is None:
@@ -312,12 +319,24 @@ class BaseStockClient():
                     body_buf = zlib.decompress(body_buf)
 
                 return body_buf
-        except Exception as e:
-            log.debug(str(e))
+        except (socket.error, OSError) as e:
+            log.debug(f"网络错误: {e}")
             self.connected = False
             self.client = None
             if self.raise_exception:
-                raise TdxFunctionCallError("send error")
+                raise TdxConnectionError("连接异常断开") from e
+        except struct.error as e:
+            log.debug(f"数据包格式错误: {e}")
+            if self.raise_exception:
+                raise TdxFunctionCallError("响应数据格式错误") from e
+        except zlib.error as e:
+            log.debug(f"解压错误: {e}")
+            if self.raise_exception:
+                raise TdxFunctionCallError("响应数据解压失败") from e
+        except Exception as e:
+            log.debug(f"未预期错误: {e}")
+            if self.raise_exception:
+                raise TdxFunctionCallError("发送数据时出错") from e
 
     @update_last_ack_time
     def download_file(self, fetch_fn, filename: str, filesize=0, report_hook=None):

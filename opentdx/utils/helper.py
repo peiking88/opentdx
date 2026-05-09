@@ -1,6 +1,7 @@
 import struct
 from datetime import datetime
 
+from opentdx.exceptions import ValidationException
 from opentdx.utils.log import logger
 
 SECURITY_COEFFICIENT = {
@@ -24,6 +25,9 @@ def get_price(data, pos):
     :param pos: 起始位置
     :return: (价格, 新位置)
     """
+    if pos >= len(data):
+        raise ValidationException(f"价格解析越界: pos={pos}, data_len={len(data)}")
+
     pos_byte = 6
 
     bdata = index_bytes(data, pos)
@@ -37,6 +41,8 @@ def get_price(data, pos):
     if bdata & 0x80:
         while True:
             pos += 1
+            if pos >= len(data):
+                raise ValidationException(f"价格解析越界(变长编码): pos={pos}, data_len={len(data)}")
             bdata = index_bytes(data, pos)
             int_data += (bdata & 0x7F) << pos_byte
             pos_byte += 7
@@ -110,6 +116,9 @@ def get_datetime(category, buffer, pos):
     :param pos: 起始位置
     :return: (year, month, day, hour, minute, pos)
     """
+    if pos + 4 > len(buffer):
+        raise ValidationException(f"日期解析越界: pos={pos}, buf_len={len(buffer)}")
+
     minute = 0
     hour = 15
 
@@ -141,6 +150,9 @@ def get_time(buffer, pos):
     :param pos: 起始位置
     :return: (hour, minute, pos)
     """
+    if pos + 2 > len(buffer):
+        raise ValidationException(f"时间解析越界: pos={pos}, buf_len={len(buffer)}")
+
     (minutes,) = struct.unpack("<H", buffer[pos: pos + 2])
 
     hour = int(minutes / 60)
@@ -207,7 +219,7 @@ def get_security_type(market, code):
             return "SH_BOND"
 
     logger.debug("Unknown security exchange !")
-    raise NotImplementedError
+    raise NotImplementedError(f"未知证券类型: market={market}, code={code}")
 
 
 def time_frame(current_time=None):

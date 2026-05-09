@@ -211,8 +211,10 @@ def format_time(time_stamp):
     return time_str
 
 def unpack_futures(data, code_len: int = 23):
-    if len(data) == 292 + code_len:
-        raise ValidationException("futures data length mismatch")
+    if len(data) != 291 + code_len:
+        raise ValidationException(
+            f"期货数据长度不匹配: 期望 {291 + code_len}, 实际 {len(data)}"
+        )
     
     market, code = struct.unpack(f'<B{code_len}s', data[:1 + code_len])
     active, pre_close, open, high, low, close, open_position, add_position, vol, curr_vol, amount, in_vol, out_vol, u14, hold_position = struct.unpack(f'<I5f4If4I', data[1 + code_len: 61 + code_len])
