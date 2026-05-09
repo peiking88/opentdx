@@ -5,6 +5,7 @@ from .client.macQuotationClient import macQuotationClient, macExQuotationClient
 from .exceptions import TdxConnectionError, TdxFunctionCallError, ValidationException
 from .utils.to_df import to_df
 from .utils.vipdoc_validator import VipdocValidator
+from .utils.date_utils import parse_tdx_date
 from .reader import (
     TdxConnectCfgReader,
     TdxDailyBarReader, TdxExHqDailyBarReader, TdxMinBarReader,
@@ -24,6 +25,7 @@ from .const import (
     BOARD_TYPE,
     EX_BOARD_TYPE,
     EX_MARKET,
+    EX_CATEGORY,
 )
 
 __all__ = [
@@ -37,6 +39,7 @@ __all__ = [
     "ValidationException",
     "to_df",
     "VipdocValidator",
+    "parse_tdx_date",
     "TdxConnectCfgReader",
     "TdxDailyBarReader",
     "TdxExHqDailyBarReader",
@@ -61,4 +64,5 @@ __all__ = [
     "BOARD_TYPE",
     "EX_BOARD_TYPE",
     "EX_MARKET",
+    "EX_CATEGORY",
 ]

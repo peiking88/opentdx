@@ -62,7 +62,7 @@ class TestTdxDailyBarReader:
         assert reader.get_security_type("sz399001.day") == "SZ_INDEX"
         assert reader.get_security_type("sh600000.day") == "SH_A_STOCK"
         assert reader.get_security_type("sh999999.day") == "SH_INDEX"
-        assert reader.get_security_type("sh688001.day") == "SH_A_STOCK"
+        assert reader.get_security_type("sh688001.day") == "SH_STAR_STOCK"
 
     def test_unknown_security_type(self):
         reader = TdxDailyBarReader()

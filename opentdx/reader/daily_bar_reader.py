@@ -11,13 +11,14 @@ class TdxDailyBarReader(BaseReader):
     SECURITY_EXCHANGE = ["sz", "sh"]
 
     SECURITY_TYPE = [
-        "SH_A_STOCK", "SH_B_STOCK", "SH_INDEX", "SH_FUND", "SH_BOND",
+        "SH_A_STOCK", "SH_B_STOCK", "SH_STAR_STOCK", "SH_INDEX", "SH_FUND", "SH_BOND",
         "SZ_A_STOCK", "SZ_B_STOCK", "SZ_INDEX", "SZ_FUND", "SZ_BOND",
     ]
 
     SECURITY_COEFFICIENT = {
         "SH_A_STOCK": [0.01, 0.01],
         "SH_B_STOCK": [0.001, 0.01],
+        "SH_STAR_STOCK": [0.01, 0.01],
         "SH_INDEX": [0.01, 1.0],
         "SH_FUND": [0.001, 1.0],
         "SH_BOND": [0.001, 1.0],
@@ -103,21 +104,23 @@ class TdxDailyBarReader(BaseReader):
                 return "SZ_B_STOCK"
             if code_head in ["39"]:
                 return "SZ_INDEX"
-            if code_head in ["15", "16"]:
+            if code_head in ["15", "16", "18"]:
                 return "SZ_FUND"
             if code_head in ["10", "11", "12", "13", "14"]:
                 return "SZ_BOND"
 
         if exchange == self.SECURITY_EXCHANGE[1]:
-            if code_head in ["60", "68"]:
+            if code_head in ["60"]:
                 return "SH_A_STOCK"
+            if code_head in ["68"]:
+                return "SH_STAR_STOCK"
             if code_head in ["90"]:
                 return "SH_B_STOCK"
             if code_head in ["00", "88", "99"]:
                 return "SH_INDEX"
-            if code_head in ["50", "51"]:
+            if code_head in ["50", "51", "58"]:
                 return "SH_FUND"
-            if code_head in ["01", "10", "11", "12", "13", "14", "20"]:
+            if code_head in ["01", "02", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"]:
                 return "SH_BOND"
 
         logger.debug("Unknown security exchange !")

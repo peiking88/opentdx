@@ -131,7 +131,7 @@ class HistoryFinancialCrawler(BaseCrawler):
         return results
 
     @staticmethod
-    def to_df(data):
+    def to_df(data, header=None):
         if not data:
             return None
 
@@ -140,5 +140,13 @@ class HistoryFinancialCrawler(BaseCrawler):
 
         df = pd.DataFrame(data=data, columns=col)
         df.set_index("code", inplace=True)
+
+        if header == 'zh':
+            from opentdx.crawler.columns import columns
+
+            for i, v in enumerate(df.columns):
+                if i >= len(columns):
+                    columns.append(v)
+            df.columns = columns
 
         return df
