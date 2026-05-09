@@ -8,6 +8,7 @@ import pytest
 from opentdx.const import EX_MARKET, MARKET
 from opentdx.parser.baseParser import BaseParser
 from opentdx.utils.help import get_price
+from opentdx.exceptions import ValidationException
 
 
 def _run_deserialize(parser: BaseParser, payload: bytes) -> object:
@@ -164,7 +165,7 @@ class TestF452:
 class TestQuotesEncrypt:
     def test_constructor_empty_raises(self):
         from opentdx.parser.quotation.quotes_encrypt import QuotesEncrypt
-        with pytest.raises(ValueError, match='count'):
+        with pytest.raises(ValidationException, match='count'):
             QuotesEncrypt([])
 
     def test_constructor_with_stocks(self):

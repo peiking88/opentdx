@@ -1,6 +1,7 @@
 #coding: utf-8
 import struct
 from opentdx.utils.base_reader import BaseReader
+from opentdx.exceptions import ValidationException
 from collections import OrderedDict
 import pandas as pd
 import os
@@ -85,12 +86,12 @@ class CustomerBlockReader(BaseReader):
     def get_data(self, fname, result_type=BlockReader_TYPE_FLAT):
 
         if not os.path.isdir(fname):
-            raise Exception('not a directory')
+            raise ValidationException('not a directory')
 
         block_file = '/'.join([fname,'blocknew.cfg'])
 
         if not os.path.exists(block_file):
-            raise Exception('file not exists')
+            raise ValidationException('file not exists')
 
         block_data = open(block_file, 'rb').read()
 
@@ -105,7 +106,7 @@ class CustomerBlockReader(BaseReader):
             n2 = n2.split('\x00')[0]
             bf = '/'.join([fname,n2 + '.blk'])
             if not os.path.exists(bf):
-                raise Exception('file not exists')
+                raise ValidationException('file not exists')
 
             codes = open(bf, 'r').read().splitlines()
             if result_type == BlockReader_TYPE_FLAT:

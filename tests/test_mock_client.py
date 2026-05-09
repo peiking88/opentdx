@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 
 from opentdx.const import MARKET, EX_MARKET, PERIOD, ADJUST, CATEGORY
+from opentdx.exceptions import ValidationException
 from opentdx.client.quotationClient import QuotationClient
 from opentdx.client.exQuotationClient import exQuotationClient
 from opentdx.tdxClient import TdxClient
@@ -334,7 +335,7 @@ class TestErrorPaths:
         client = macQuotationClient()
         client._sp_mode_enabled = False
         from opentdx.const import BOARD_TYPE
-        with pytest.raises(RuntimeError, match='sp'):
+        with pytest.raises(ValidationException, match='sp'):
             client.get_board_count(BOARD_TYPE.HY)
 
     def test_empty_kline(self):

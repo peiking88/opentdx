@@ -6,6 +6,7 @@ import struct
 from opentdx.const import EX_MARKET, MARKET
 from opentdx.enums import IndustryCode
 from opentdx.utils.log import log
+from opentdx.exceptions import ValidationException
 
 def combine_to_datetime(ymd, date_num, format_tdx_time=False):
     date_str = str(ymd)
@@ -191,7 +192,7 @@ def format_time(time_stamp):
 
 def unpack_futures(data, code_len: int = 23):
     if len(data) == 292 + code_len:
-        raise Exception("futures data length mismatch")
+        raise ValidationException("futures data length mismatch")
     
     market, code = struct.unpack(f'<B{code_len}s', data[:1 + code_len])
     active, pre_close, open, high, low, close, open_position, add_position, vol, curr_vol, amount, in_vol, out_vol, u14, hold_position = struct.unpack(f'<I5f4If4I', data[1 + code_len: 61 + code_len])

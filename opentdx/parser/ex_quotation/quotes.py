@@ -4,6 +4,7 @@ from typing import override
 from opentdx.const import EX_MARKET
 from opentdx.parser.baseParser import BaseParser, register_parser
 from opentdx.utils.help import unpack_futures
+from opentdx.exceptions import ValidationException
 
 # > 8a24 00 00000030750000 
 # > 8a24 00 00303032313132 
@@ -39,7 +40,7 @@ class Quotes(BaseParser):
     def __init__(self, code_list: list[tuple[EX_MARKET, str]]):
         length = len(code_list)
         if length <= 0:
-            raise Exception('futures count must > 0')
+            raise ValidationException('futures count must > 0')
         self.body = bytearray(struct.pack('<B7xH', 5, length))
         
         for market, code in code_list:

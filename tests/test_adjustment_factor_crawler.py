@@ -9,6 +9,7 @@ import pytest
 
 from opentdx.const import MARKET, ADJUST
 from opentdx.crawler.adjustment_factor_crawler import AdjustmentFactorCrawler, _parse_event_date
+from opentdx.exceptions import ValidationException
 
 
 class TestAdjustmentFactorCrawler:
@@ -41,7 +42,7 @@ class TestAdjustmentFactorCrawler:
     def test_fetch_without_client_raises(self):
         """测试未设置 client 时抛出异常"""
         crawler = AdjustmentFactorCrawler()
-        with pytest.raises(RuntimeError, match="未设置 client"):
+        with pytest.raises(ValidationException, match="未设置 client"):
             crawler.fetch_adjustment_factors(MARKET.SZ, "000001")
 
     def test_fetch_safe_returns_empty_on_error(self):

@@ -6,6 +6,7 @@ from typing import override
 import pandas as pd
 from opentdx.const import MARKET
 from opentdx.parser.baseParser import BaseParser, register_parser
+from opentdx.exceptions import ValidationException
 
 
 @register_parser(0x1218, 1)
@@ -33,7 +34,7 @@ class SymbolBelongBoard(BaseParser):
                 columns = ["board_type", "market", "board_symbol", "board_symbol_name", "close", "pre_close",
                         "speed_pct", "symbol_market", "symbol", "symbol_name", "symbol_close", "symbol_pre_close", "symbol_speed_pct"]
             else:
-                raise ValueError("不支持的字段数量")
+                raise ValidationException("不支持的字段数量")
 
             df = pd.DataFrame(python_list, columns=columns)
             for col in ["close", "pre_close"]:

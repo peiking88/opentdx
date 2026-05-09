@@ -6,6 +6,7 @@ from opentdx.const import ADJUST, BOARD_TYPE, CATEGORY, EX_CATEGORY, EX_MARKET, 
 from opentdx.parser.mac_quotation import BoardList, BoardMembersQuotes, SymbolBar, SymbolBelongBoard, SymbolCapitalFlow,SymbolTickChart, SymbolQuotes, SymbolTransaction
 from opentdx.utils.log import log
 from opentdx.utils.bitmap import FieldBit, PresetField, FieldSelection
+from opentdx.exceptions import ValidationException
 from functools import wraps
 
 
@@ -49,7 +50,7 @@ class CommonClientMixin:
     def _check_sp_mode(self):
         """检查是否已启用sp模式"""
         if not self._sp_mode_enabled:
-            raise RuntimeError(
+            raise ValidationException(
                 "必须先调用 sp() 方法启用sp模式后才能使用此方法。\n"
                 "示例: client.sp().get_board_members_quotes(...)"
             )

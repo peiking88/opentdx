@@ -128,6 +128,28 @@ opentdx doc    # 交互式API演示
  13 files changed, 1530 insertions(+), 12 deletions(-)
 ```
 
+### 2026-05-09 16:30:00
+```
+ README.md                                    |   3 +-
+ opentdx/client/baseStockClient.py            |  19 ++--
+ opentdx/client/commonClientMixin.py          |   3 +-
+ opentdx/crawler/adjustment_factor_crawler.py |   5 +-
+ opentdx/parser/ex_quotation/quotes.py        |   3 +-
+ opentdx/parser/ex_quotation/quotes2.py       |   3 +-
+ opentdx/parser/mac_quotation/symbol_belong_board.py | 3 +-
+ opentdx/parser/quotation/quotes.py           |   3 +-
+ opentdx/parser/quotation/quotes_detail.py    |   3 +-
+ opentdx/parser/quotation/quotes_encrypt.py   |   3 +-
+ opentdx/utils/block_reader.py                |   7 +-
+ opentdx/utils/help.py                        |   3 +-
+ pyproject.toml                               |   2 +-
+ summary.md                                   |   2 +-
+ tests/test_adjustment_factor_crawler.py      |   3 +-
+ tests/test_mock_client.py                    |   3 +-
+ tests/test_parser_mock.py                    |   3 +-
+ 17 files changed, 42 insertions(+), 28 deletions(-)
+```
+
 ### 2026-05-09 13:18:07
 ```
  .gitignore                                       | 5 +++--

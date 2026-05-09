@@ -6,6 +6,7 @@ from pathlib import Path
 
 from opentdx.const import MARKET, ADJUST
 from opentdx.utils.log import logger
+from opentdx.exceptions import ValidationException
 
 
 class AdjustmentFactorCrawler:
@@ -19,7 +20,7 @@ class AdjustmentFactorCrawler:
     def fetch_adjustment_factors(self, market, code):
         """获取单只股票的除权除息事件列表"""
         if self.client is None:
-            raise RuntimeError("未设置 client，请先通过构造函数注入 QuotationClient")
+            raise ValidationException("未设置 client，请先通过构造函数注入 QuotationClient")
 
         if isinstance(code, str):
             code_str = code
@@ -106,7 +107,7 @@ class AdjustmentFactorCrawler:
     def _get_stock_list(self, market):
         """获取市场股票列表"""
         if self.client is None:
-            raise RuntimeError("未设置 client")
+            raise ValidationException("未设置 client")
         try:
             stocks = self.client.get_security_list(market, 0)
             return [s["code"] for s in stocks if "code" in s]

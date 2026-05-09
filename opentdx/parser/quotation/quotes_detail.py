@@ -4,6 +4,7 @@ from typing import override
 from opentdx.const import MARKET
 from opentdx.parser.baseParser import BaseParser, register_parser
 from opentdx.utils.help import format_time, get_price
+from opentdx.exceptions import ValidationException
 
 
 @register_parser(0x53e) # TODO: 
@@ -11,7 +12,7 @@ class QuotesDetail(BaseParser):
     def __init__(self, stocks: list[tuple[MARKET, str]]):
         count = len(stocks)
         if count <= 0:
-            raise ValueError('stocks count must > 0')
+            raise ValidationException('stocks count must > 0')
         self.body = bytearray(struct.pack('<H6sH', 5, b'', count))
         
         for market, code in stocks:

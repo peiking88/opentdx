@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from opentdx.parser.baseParser import BaseParser
 from opentdx.utils.log import log
 from opentdx.utils.heartbeat import HeartBeatThread
+from opentdx.exceptions import TdxConnectionError, TdxFunctionCallError
 
 import zlib
 import struct
@@ -44,7 +45,7 @@ def update_last_ack_time(func):
 
             ret = None
             if self.raise_exception:
-                to_raise = Exception("calling function error")
+                to_raise = TdxFunctionCallError("calling function error")
                 to_raise.original_exception = current_exception if current_exception else None
                 raise to_raise
         # raise_exception=True 抛出异常, raise_exception=False 返回None
@@ -164,7 +165,7 @@ class BaseStockClient():
             
             infos.sort(key=lambda x: x['time'])
             if len(infos) == 0:
-                raise Exception("no available server")
+                raise TdxConnectionError("no available server")
 
             return self._connect(infos[0]['ip'], infos[0]['port'], time_out, bind_port, bind_ip)
         else:
@@ -199,13 +200,13 @@ class BaseStockClient():
             self.connected = False
             log.debug("connection expired")
             if self.raise_exception:
-                raise Exception("connection timeout error", e)
+                raise TdxConnectionError("connection timeout error") from e
             return None
         except Exception as e:
             self.client = None
             self.connected = False
             if self.raise_exception:
-                raise Exception("other errors", e)
+                raise TdxConnectionError("other errors") from e
             return None
 
         log.debug("connected!")
@@ -240,7 +241,7 @@ class BaseStockClient():
             except Exception as e:
                 log.debug(str(e))
                 if self.raise_exception:
-                    raise Exception("disconnect err")
+                    raise TdxConnectionError("disconnect err")
             log.debug("disconnected")
             self.connected = False
 
@@ -269,7 +270,7 @@ class BaseStockClient():
         if not self.client:
             log.debug("not connected")
             if self.raise_exception:
-                raise Exception("not connected")
+                raise TdxConnectionError("not connected")
             return None
 
         # customize: 自定义协议号
@@ -286,7 +287,7 @@ class BaseStockClient():
             if send_data != len(data):
                 log.debug("send data error")
                 if self.raise_exception:
-                    raise Exception("send data error")
+                    raise TdxFunctionCallError("send data error")
             else:
                 head_buf = self.client.recv(RSP_HEADER_LEN)
                 now = time.time()
@@ -304,7 +305,7 @@ class BaseStockClient():
                 while zipsize > 0:
                     data_buf = self.client.recv(zipsize)
                     if not data_buf:
-                        raise Exception("connection closed while receiving data")
+                        raise TdxConnectionError("connection closed while receiving data")
                     body_buf.extend(data_buf)
                     zipsize -= len(data_buf)
                 if need_unzip_size:
@@ -316,7 +317,7 @@ class BaseStockClient():
             self.connected = False
             self.client = None
             if self.raise_exception:
-                raise Exception("send error")
+                raise TdxFunctionCallError("send error")
 
     @update_last_ack_time
     def download_file(self, fetch_fn, filename: str, filesize=0, report_hook=None):
