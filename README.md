@@ -105,3 +105,22 @@ if __name__ == "__main__":
 ---
 
 [![Star History Chart](https://api.star-history.com/svg?repos=LisonEvf/opentdx&type=Date)](https://star-history.com/#LisonEvf/opentdx&Date)
+
+### 2026-05-09 07:44:04
+```
+ .github/workflows/publish.yml                      |   0
+ .github/workflows/tag.yml                          |   0
+ .gitignore                                         |   0
+ CLAUDE.md                                          |  71 ++
+ LICENSE                                            |   0
+ README.md                                          |   5 +-
+ TDXMACDStrategy.py                                 |   0
+ opentdx/__init__.py                                |  25 +
+ opentdx/cli.py                                     |   0
+ opentdx/client/__init__.py                         |   0
+ opentdx/client/baseStockClient.py                  |  28 +-
+ opentdx/client/commonClientMixin.py                | 144 +---
+ opentdx/client/exQuotationClient.py                |  22 +
+ opentdx/client/macQuotationClient.py               |   9 +-
+ opentdx/client/quotationClient.py                  |   0
+```
