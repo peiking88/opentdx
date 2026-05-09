@@ -109,3 +109,21 @@ opentdx doc    # 交互式API演示
 #量化交易 #TDX接口 #Python金融
 
 [![Star History Chart](https://api.star-history.com/svg?repos=LisonEvf/opentdx&type=Date)](https://star-history.com/#LisonEvf/opentdx&Date)
+
+### 2026-05-09 10:37:35
+```
+ API_REFERENCE.md                             |  59 ++++-
+ README.md                                    |   5 +-
+ opentdx/__init__.py                          |   7 +-
+ opentdx/crawler/__init__.py                  |   2 +
+ opentdx/crawler/adjustment_factor_crawler.py | 298 +++++++++++++++++++++++++
+ opentdx/reader/__init__.py                   |   2 +
+ opentdx/reader/connect_cfg_reader.py         | 118 ++++++++++
+ opentdx/utils/vipdoc_validator.py            | 253 ++++++++++++++++++++++
+ pyproject.toml                               |   2 +-
+ summary.md                                   |  36 +++-
+ tests/test_adjustment_factor_crawler.py      | 312 +++++++++++++++++++++++++++
+ tests/test_connect_cfg_reader.py             | 203 +++++++++++++++++
+ tests/test_vipdoc_validator.py               | 245 +++++++++++++++++++++
+ 13 files changed, 1530 insertions(+), 12 deletions(-)
+```
