@@ -1,6 +1,6 @@
 # OpenTDX API 参考文档
 
-> 版本 0.3.0 | 285 测试 | 90% 覆盖率
+> 版本 0.4.0 | 332 测试 | 90% 覆盖率
 
 ## 目录
 
@@ -11,6 +11,7 @@
 - [SP 协议板块接口](#sp-协议板块接口)
 - [枚举类型](#枚举类型)
 - [工具函数](#工具函数)
+- [本地数据工具](#本地数据工具)
 
 ---
 
@@ -357,4 +358,60 @@ PresetField.FUNDAMENTAL # 基本面
 # 组合
 sel = PresetField.BASIC + FieldBit.AH_CODE
 sel = PresetField.BASIC | PresetField.QUOTE
+```
+
+## 本地数据工具
+
+### TdxConnectCfgReader — 通信配置读取
+
+```python
+from opentdx import TdxConnectCfgReader
+
+# 自动检测 connect.cfg 路径（支持 TDX_HOME 环境变量）
+reader = TdxConnectCfgReader()
+hq = reader.get_hq_servers()        # [{"hostname": "深圳主站1", "ip": "1.2.3.4", "port": 7709}, ...]
+all_srv = reader.get_all_servers()  # {"HQHOST": [...], "INFOHOST": [...], ...}
+
+# 指定路径
+reader = TdxConnectCfgReader(cfg_path="/custom/path/connect.cfg", auto_detect=False)
+```
+
+### VipdocValidator — 本地数据校验
+
+```python
+from opentdx import VipdocValidator
+
+validator = VipdocValidator()                           # 或 VipdocValidator(vipdoc_path="/path/to/vipdoc")
+result = validator.validate(markets=["sz", "sh"], periods=["lday", "fzline"])  # 结构化校验
+report = validator.generate_report()                    # 人类可读报告
+freshness = validator.check_freshness()                 # 时效性检查（距今天数）
+count = validator.count_files("sz", "lday")             # 单周期文件数
+```
+
+### AdjustmentFactorCrawler — 复权因子下载
+
+```python
+from opentdx import AdjustmentFactorCrawler
+from opentdx.const import MARKET, ADJUST
+
+crawler = AdjustmentFactorCrawler(output_dir="/path/to/output")
+
+# 需配合 QuotationClient 下载
+from opentdx import QuotationClient
+qc = QuotationClient().connect().login()
+crawler.client = qc
+
+events = crawler.fetch_adjustment_factors(MARKET.SZ, "000001")   # 单股 XDXR
+results = crawler.batch_fetch(markets=[MARKET.SZ])               # 批量下载
+
+# 因子计算（静态方法，无需联网）
+qfq = AdjustmentFactorCrawler.compute_qfq(events)    # 前复权因子分量
+hfq = AdjustmentFactorCrawler.compute_hfq(events)    # 后复权因子分量
+
+# 结合前收盘价的完整因子
+full = AdjustmentFactorCrawler.compute_full_factor(events, {"2026-05-08": 10.0}, adjust=ADJUST.QFQ)
+
+# JSON 持久化
+crawler.save_to_json(results, market=MARKET.SZ)
+data = crawler.load_from_json("path/to/file.json")
 ```

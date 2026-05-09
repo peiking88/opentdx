@@ -4,13 +4,15 @@ from .client.exQuotationClient import exQuotationClient
 from .client.macQuotationClient import macQuotationClient, macExQuotationClient
 from .exceptions import TdxConnectionError, TdxFunctionCallError, ValidationException
 from .utils.to_df import to_df
+from .utils.vipdoc_validator import VipdocValidator
 from .reader import (
+    TdxConnectCfgReader,
     TdxDailyBarReader, TdxExHqDailyBarReader, TdxMinBarReader,
     TdxLCMinBarReader, HistoryFinancialReader,
     BlockReader, CustomerBlockReader,
     TdxFileNotFoundException, TdxNotAssignVipdocPathException,
 )
-from .crawler import BaseCrawler, HistoryFinancialCrawler, HistoryFinancialListCrawler
+from .crawler import BaseCrawler, HistoryFinancialCrawler, HistoryFinancialListCrawler, AdjustmentFactorCrawler
 from .const import (
     MARKET,
     CATEGORY,
@@ -34,6 +36,8 @@ __all__ = [
     "TdxFunctionCallError",
     "ValidationException",
     "to_df",
+    "VipdocValidator",
+    "TdxConnectCfgReader",
     "TdxDailyBarReader",
     "TdxExHqDailyBarReader",
     "TdxMinBarReader",
@@ -46,6 +50,7 @@ __all__ = [
     "BaseCrawler",
     "HistoryFinancialCrawler",
     "HistoryFinancialListCrawler",
+    "AdjustmentFactorCrawler",
     "MARKET",
     "CATEGORY",
     "PERIOD",
