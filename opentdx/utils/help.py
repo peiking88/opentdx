@@ -12,21 +12,36 @@ from opentdx.exceptions import ValidationException
 
 
 def parse_tdx_date(val):
-    """将日期字符串或日期对象转换为 TDX 整数格式 (YYYYMMDD)。
+    """将日期值转换为 datetime.date。
+
+    接受 None、空字符串、int(YYYYMMDD)、str(YYYYMMDD/YYYY-MM-DD)、date、datetime。
 
     >>> parse_tdx_date("2024-05-09")
-    20240509
+    datetime.date(2024, 5, 9)
     >>> parse_tdx_date("20240509")
-    20240509
+    datetime.date(2024, 5, 9)
+    >>> parse_tdx_date(20240509)
+    datetime.date(2024, 5, 9)
     """
     if val is None:
         return None
-    if isinstance(val, int):
+    if isinstance(val, datetime):
+        return val.date()
+    if isinstance(val, date):
         return val
-    if isinstance(val, (date, datetime)):
-        return int(val.strftime("%Y%m%d"))
+    if isinstance(val, int) and val > 0:
+        s = str(val)
+        try:
+            return date(int(s[:4]), int(s[4:6]), int(s[6:8]))
+        except (ValueError, IndexError):
+            return None
     if isinstance(val, str):
-        return int(val.replace("-", "").replace("/", "").strip())
+        val = val.replace("-", "").replace("/", "").strip()
+        if val and len(val) == 8:
+            try:
+                return date(int(val[:4]), int(val[4:6]), int(val[6:8]))
+            except (ValueError, IndexError):
+                pass
     return None
 
 
