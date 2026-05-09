@@ -127,3 +127,15 @@ opentdx doc    # 交互式API演示
  tests/test_vipdoc_validator.py               | 245 +++++++++++++++++++++
  13 files changed, 1530 insertions(+), 12 deletions(-)
 ```
+
+### 2026-05-09 13:18:07
+```
+ .gitignore                                       | 5 +++--
+ API_REFERENCE.md => docs/API_REFERENCE.md        | 0
+ CHANGELOG.md => docs/CHANGELOG.md                | 0
+ summary.md => docs/summary.md                    | 8 ++++----
+ TDXMACDStrategy.py => scripts/TDXMACDStrategy.py | 0
+ demo_diff.py => scripts/demo_diff.py             | 0
+ demo_ext.py => scripts/demo_ext.py               | 0
+ 7 files changed, 7 insertions(+), 6 deletions(-)
+```
