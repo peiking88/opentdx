@@ -4,7 +4,6 @@ from opentdx.utils.base_reader import BaseReader
 from collections import OrderedDict
 import pandas as pd
 import os
-from io import BytesIO
 
 """
 参考这个 http://blog.csdn.net/Metal1/article/details/44352639

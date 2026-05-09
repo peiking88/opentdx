@@ -2,13 +2,6 @@
 import struct
 
 
-class TdxFileNotFoundException(Exception):
-    pass
-
-class TdxNotAssignVipdocPathException(Exception):
-    pass
-
-
 class BaseReader:
 
     def unpack_records(self, format, data):

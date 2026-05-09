@@ -1,6 +1,6 @@
 from datetime import time
 import struct
-from opentdx.const import MARKET, EX_MARKET, PERIOD
+from opentdx.const import MARKET, EX_MARKET
 from opentdx.parser.baseParser import BaseParser, register_parser
 
 

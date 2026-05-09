@@ -2,7 +2,7 @@ from datetime import date
 
 from opentdx.client.exQuotationClient import exQuotationClient
 from opentdx.client.quotationClient import QuotationClient
-from opentdx.const import ADJUST, BLOCK_FILE_TYPE, CATEGORY, EX_MARKET, MARKET, PERIOD, SORT_TYPE
+from opentdx.const import CATEGORY, EX_MARKET, MARKET, PERIOD, SORT_TYPE
 
 
 # TdxClient → QuotationClient 方法映射: 对外名称 → 内部方法名

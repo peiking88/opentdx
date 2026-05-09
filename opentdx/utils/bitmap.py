@@ -1,7 +1,6 @@
 # coding=utf-8
 from __future__ import annotations
 from enum import Enum, IntEnum
-from opentdx.utils.log import log
 
 FIELD_BITMAP_MAP = {
     # 基础字段（位0x0-0x5）- ✅ 100% 确认

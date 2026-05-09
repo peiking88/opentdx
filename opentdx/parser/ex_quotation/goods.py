@@ -1,5 +1,5 @@
 
-from opentdx.const import EX_MARKET, PERIOD
+from opentdx.const import EX_MARKET
 from opentdx.parser.baseParser import BaseParser, register_parser
 from opentdx.utils.log import log
 import struct

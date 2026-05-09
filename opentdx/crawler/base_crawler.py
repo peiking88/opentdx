@@ -2,14 +2,12 @@ import abc
 import tempfile
 from urllib.request import Request, urlopen
 
-from opentdx.utils.log import logger
-
 
 class BaseCrawler:
     mode = "http"
 
     def fetch_and_parse(self, reporthook=None, path_to_download=None, proxies=None, chunksize=1024 * 50, *args, **kwargs):
-        method = ("get_content", "fetch_via_http")[self.mode == "http"]
+        method = "fetch_via_http" if self.mode == "http" else "get_content"
         download_file = getattr(self, method)(
             reporthook=reporthook,
             path_to_download=path_to_download,
@@ -24,7 +22,10 @@ class BaseCrawler:
         return result
 
     def fetch_via_http(self, reporthook=None, path_to_download=None, chunksize=1024 * 50, *args, **kwargs):
-        download_file = path_to_download and open(path_to_download, "wb") or tempfile.NamedTemporaryFile(delete=True)
+        if path_to_download:
+            download_file = open(path_to_download, "wb")
+        else:
+            download_file = tempfile.NamedTemporaryFile(delete=True)
         url = self.get_url(*args, **kwargs)
 
         request = Request(url)

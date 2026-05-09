@@ -1,7 +1,7 @@
 """通达信 vipdoc 本地数据校验器"""
 import os
 import struct
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 
