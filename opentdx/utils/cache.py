@@ -45,8 +45,5 @@ class SimpleCache:
         self._cache.clear()
 
 
-# XDXR 数据缓存（除权除息）
-xdxr_cache = SimpleCache(ttl_seconds=86400)
-
 # Finance 数据缓存（股本信息）
 finance_cache = SimpleCache(ttl_seconds=86400)

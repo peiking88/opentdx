@@ -6,10 +6,10 @@ class BaseParser:
     head = 0xc
     customize = 0
     need_zip = False
-    body = bytearray()
-    
+
     def __init__(self):
         super().__init__()
+        self.body = bytearray()
 
     def serialize(self):
         body = struct.pack('<H', self.msg_id) + self.body

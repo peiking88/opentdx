@@ -1,12 +1,41 @@
 # coding=utf-8
 
+import os
 from datetime import date, datetime, timedelta
+from pathlib import Path
 import struct
 
 from opentdx.const import EX_MARKET, MARKET
 from opentdx.enums import IndustryCode
 from opentdx.utils.log import log
 from opentdx.exceptions import ValidationException
+
+
+def parse_tdx_date(val):
+    """将日期字符串或日期对象转换为 TDX 整数格式 (YYYYMMDD)。
+
+    >>> parse_tdx_date("2024-05-09")
+    20240509
+    >>> parse_tdx_date("20240509")
+    20240509
+    """
+    if val is None:
+        return None
+    if isinstance(val, int):
+        return val
+    if isinstance(val, (date, datetime)):
+        return int(val.strftime("%Y%m%d"))
+    if isinstance(val, str):
+        return int(val.replace("-", "").replace("/", "").strip())
+    return None
+
+
+def _tdx_base_path():
+    """获取 TDX 安装根路径，可通过环境变量 TDX_HOME 配置"""
+    env = os.environ.get("TDX_HOME", "")
+    if env:
+        return Path(env)
+    return Path.home() / ".local" / "share" / "tdxcfv" / "drive_c" / "tc"
 
 def combine_to_datetime(ymd, date_num, format_tdx_time=False):
     date_str = str(ymd)
@@ -17,23 +46,6 @@ def combine_to_datetime(ymd, date_num, format_tdx_time=False):
     if format_tdx_time and 0 <= dt.hour <= 5:
         dt += timedelta(days=1)
     return dt
-
-def query_market(code) -> MARKET | None:
-    """
-    0 - 深圳， 1 - 上海
-    """
-    if code.startswith(("50", "51", "60", "68", "90", "110", "113", "132", "204")):
-        return MARKET.SH
-    elif code.startswith(("00", "12", "13", "15", "16", "18", "20", "30", "39", "115", "1318")):
-        return MARKET.SZ
-    elif code.startswith(("5", "6", "7", "9")):
-        return MARKET.SH
-    elif code.startswith(("4", "8")):
-        return MARKET.BJ
-    else:
-        log.error("unknown market code: {}".format(code))
-        return None
-
 
 # 根据可视化的板块id获取到系统需要的真实板块code
 def exchange_board_code(board_symbol):
@@ -134,13 +146,6 @@ def get_price(data, pos):
         int_data = -int_data
 
     return int_data, pos
-
-def seconds_to_time_str(secs: int) -> str:
-    """将从0点开始的秒数转换为 HH:MM:SS"""
-    h = secs // 3600
-    m = (secs % 3600) // 60
-    s = secs % 60
-    return f"{h:02d}:{m:02d}:{s:02d}"
 
 def to_datetime(num, with_time=False) -> datetime:
     year = 0

@@ -3,7 +3,7 @@ import tempfile
 from urllib.request import Request, urlopen
 
 
-class BaseCrawler:
+class BaseCrawler(abc.ABC):
     mode = "http"
 
     def fetch_and_parse(self, reporthook=None, path_to_download=None, proxies=None, chunksize=1024 * 50, *args, **kwargs):

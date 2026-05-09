@@ -161,3 +161,22 @@ opentdx doc    # 交互式API演示
  demo_ext.py => scripts/demo_ext.py               | 0
  7 files changed, 7 insertions(+), 6 deletions(-)
 ```
+
+### 2026-05-09 19:23:10
+```
+ opentdx/__init__.py                        |  2 +-
+ opentdx/const.py                           |  2 +-
+ opentdx/crawler/base_crawler.py            |  2 +-
+ opentdx/doc.py                             | 13 --------
+ opentdx/enums/__init__.py                  |  6 +---
+ opentdx/parser/baseParser.py               |  4 +--
+ opentdx/parser/quotation/__init__.py       |  3 +-
+ opentdx/parser/quotation/get_block_info.py | 18 ----------
+ opentdx/reader/connect_cfg_reader.py       |  8 +----
+ opentdx/utils/cache.py                     |  3 --
+ opentdx/utils/date_utils.py                | 17 ----------
+ opentdx/utils/help.py                      | 53 ++++++++++++++++--------------
+ opentdx/utils/vipdoc_validator.py          |  8 +----
+ pyproject.toml                             |  2 +-
+ summary.md                                 | 24 +++++++++++---
+```

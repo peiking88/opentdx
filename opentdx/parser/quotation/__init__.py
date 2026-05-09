@@ -22,7 +22,7 @@ from opentdx.parser.quotation.unusual import Unusual
 from opentdx.parser.quotation.volume_profile import VolumeProfile
 from opentdx.parser.quotation.company_info import Category as CompanyCategory, Content as CompanyContent, Finance, XDXR
 from opentdx.parser.quotation.file import Download as FileDownload, Meta as FileMeta, Block
-from opentdx.parser.quotation.get_block_info import BlockInfo, BlockInfoMeta, get_and_parse_block_info
+from opentdx.parser.quotation.get_block_info import BlockInfo, BlockInfoMeta
 from opentdx.parser.quotation.server import ExchangeAnnouncement, HeartBeat, Announcement, Login, Info as ServerInfo, UpgradeTip
 
 __all__ = [
@@ -57,7 +57,6 @@ __all__ = [
     'Block',
     'BlockInfo',
     'BlockInfoMeta',
-    'get_and_parse_block_info',
     'ExchangeAnnouncement',
     'HeartBeat',
     'Announcement',

@@ -449,19 +449,6 @@ def _(_tdx=None):
         print(f"  预览: {data[:200].decode('utf-8', errors='replace')}")
     print()
 
-    show("client.get_table_file('tdxhy.cfg')", comment="表格文件 (通达信/申万行业对照)")
-    df = pd.DataFrame(client.get_table_file('tdxhy.cfg'),
-                      columns=['market', 'code', '通达信行业', 'unk', 'nown', '申万行业'])
-    print(f"  共 {len(df)} 条")
-    print(df[:3])
-    print()
-
-    show("client.get_csv_file('spec/speckzzdata.txt')", comment="CSV文件 (转债表)")
-    df = pd.DataFrame(client.get_csv_file('spec/speckzzdata.txt'),
-                      columns=['market', 'code', '关联股', '转股价', '票面利率', '发行规模'])
-    print(f"  共 {len(df)} 条")
-    print(df[:3])
-    print()
     client.disconnect()
 
 

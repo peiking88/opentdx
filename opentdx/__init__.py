@@ -5,7 +5,7 @@ from .client.macQuotationClient import macQuotationClient, macExQuotationClient
 from .exceptions import TdxConnectionError, TdxFunctionCallError, ValidationException
 from .utils.to_df import to_df
 from .utils.vipdoc_validator import VipdocValidator
-from .utils.date_utils import parse_tdx_date
+from .utils.help import parse_tdx_date
 from .reader import (
     TdxConnectCfgReader,
     TdxDailyBarReader, TdxExHqDailyBarReader, TdxMinBarReader,

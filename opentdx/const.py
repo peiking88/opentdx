@@ -283,7 +283,7 @@ class EX_CATEGORY(Enum):
         :return: True / False
         """
 
-        return int(code) in (item.value for item in cls)
+        return int(code) in (item._code for item in cls)
 
     
 class PERIOD(Enum):

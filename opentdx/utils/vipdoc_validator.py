@@ -4,13 +4,7 @@ import struct
 from datetime import date
 from pathlib import Path
 
-
-def _tdx_base_path():
-    """获取 TDX 安装根路径，可通过环境变量 TDX_HOME 配置"""
-    env = os.environ.get("TDX_HOME", "")
-    if env:
-        return Path(env)
-    return Path.home() / ".local" / "share" / "tdxcfv" / "drive_c" / "tc"
+from opentdx.utils.help import _tdx_base_path
 
 
 class VipdocValidator:

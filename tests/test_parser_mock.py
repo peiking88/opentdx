@@ -452,11 +452,6 @@ class TestHelperExtra:
 # ──────────────────────────────────────────────
 
 class TestHelpExtra:
-    def test_seconds_to_time_str(self):
-        from opentdx.utils.help import seconds_to_time_str
-        assert seconds_to_time_str(3661) == '01:01:01'
-        assert seconds_to_time_str(0) == '00:00:00'
-
     def test_to_datetime(self):
         from opentdx.utils.help import to_datetime
         dt = to_datetime(20240601)
@@ -495,11 +490,6 @@ class TestHelpExtraMore:
         dt = combine_to_datetime(20260508, 3600, format_tdx_time=True)
         assert dt.hour == 1
 
-    def test_query_market(self):
-        from opentdx.utils.help import query_market
-        assert query_market('600000') == MARKET.SH
-        assert query_market('000001') == MARKET.SZ
-        assert query_market('300750') == MARKET.SZ
 
     def test_ah_code_to_symbol(self):
         from opentdx.utils.help import ah_code_to_symbol
@@ -772,8 +762,7 @@ class TestCache:
         assert cache.get('x') is None
 
     def test_module_level_caches(self):
-        from opentdx.utils.cache import xdxr_cache, finance_cache
-        assert xdxr_cache is not None
+        from opentdx.utils.cache import finance_cache
         assert finance_cache is not None
 
 
