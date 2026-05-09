@@ -23,23 +23,32 @@ class K_Line(BaseParser):
 
         bars = []
         for _ in range(count):
+            if pos + 4 > data_len:
+                break
             date_num, = struct.unpack('<I', data[pos: pos + 4])
             pos += 4
             date_time = to_datetime(date_num, minute_category)
-            
+
             open, pos = get_price(data, pos)
             close, pos = get_price(data, pos)
             high, pos = get_price(data, pos)
             low, pos = get_price(data, pos)
-            
+
             vol, amount = struct.unpack('<ff', data[pos: pos + 8])
             pos += 8
 
             upCount = 0
             downCount = 0
+            # 智能检测：试探后续 4 字节是否为下一行日期，否则为 upCount/downCount
             if pos + 4 <= data_len:
-                upCount, downCount = struct.unpack('<HH', data[pos: pos + 4])
-                pos += 4
+                try:
+                    try_date, = struct.unpack('<I', data[pos: pos + 4])
+                    try_date_time = to_datetime(try_date, minute_category)
+                    if try_date_time.year < date_time.year:
+                        raise ValueError()
+                except (ValueError, struct.error):
+                    upCount, downCount = struct.unpack('<HH', data[pos: pos + 4])
+                    pos += 4
             
             bar = {
                 'datetime': date_time,

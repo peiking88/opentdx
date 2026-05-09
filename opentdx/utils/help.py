@@ -177,14 +177,28 @@ def to_datetime(num, with_time=False) -> datetime:
         minutes = num >> 16
         hour = int(minutes / 60)
         minute = minutes % 60
+        if month < 1 or month > 12 or day < 1 or day > 31 or year > datetime.now().year or hour > 23 or minute > 59:
+            year = num // 10000
+            month = num % 10000 // 100
+            day = num % 100
+            hour = 15
+            minute = 0
     else:
         year = num // 10000
         month = num % 10000 // 100
         day = num % 100
-    if year > datetime.now().year:
-        raise ValueError("year is too large")
-
-    return datetime(year, month, day, hour, minute)
+        if year > 2100 or month < 1 or month > 12 or day < 1 or day > 31:
+            zip_data = num & 0xFFFF
+            year = (zip_data >> 11) + 2004
+            month = int((zip_data & 0x7FF) / 100)
+            day = (zip_data & 0x7FF) % 100
+            hour = 15
+            minute = 0
+    try:
+        return datetime(year, month, day, hour, minute)
+    except ValueError:
+        now = datetime.now()
+        return datetime(now.year, now.month, now.day, 15, 0)
 
 def format_time(time_stamp):
     if time_stamp == 0 or time_stamp == 100:
