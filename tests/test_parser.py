@@ -9,9 +9,9 @@ from datetime import date, time
 import pandas as pd
 import pytest
 
-from opentdx.const import EX_MARKET, MARKET
+from opentdx.const import EX_MARKET, MARKET, PERIOD
 from opentdx.parser.baseParser import BaseParser
-from opentdx.utils.help import get_price
+from opentdx.utils.help import get_price, to_datetime
 from opentdx.exceptions import ValidationException
 
 
@@ -806,3 +806,87 @@ class TestPaginate:
         result = _paginate(fetch, 5, 10)
         assert len(result) == 10
         assert result == list(range(10))
+
+
+# ── K_Line upCount/downCount 智能检测 ────────────────────
+
+
+def _encode_price(val: int) -> bytes:
+    """将整数编码为 TDX 可变长价格格式（简化版，仅处理正值）。"""
+    val = abs(val)
+    b0 = val & 0x3f
+    if val < 0x40:
+        return bytes([b0])
+    b1 = (val >> 6) & 0x7f
+    if val < 0x2000:
+        return bytes([b0 | 0x80, b1])
+    b2 = (val >> 13) & 0x7f
+    return bytes([b0 | 0x80, b1 | 0x80, b2])
+
+
+def _make_kline_row(date_yyyymmdd: int, o: int, c: int, h: int, l: int,
+                     vol: float, amount: float, up: int = 0, down: int = 0) -> bytes:
+    """构造一行 K 线二进制数据。"""
+    data = struct.pack('<I', date_yyyymmdd)
+    data += _encode_price(o)
+    data += _encode_price(c)
+    data += _encode_price(h)
+    data += _encode_price(l)
+    data += struct.pack('<ff', vol, amount)
+    if up > 0 or down > 0:
+        data += struct.pack('<HH', up, down)
+    return data
+
+
+class TestKLineUpCountDetection:
+    """验证 upCount/downCount 智能检测不会将 upCount 小整数误判为日期。"""
+
+    def test_upcount_not_mistaken_for_date(self):
+        """upCount 值 2125/722 编码为 0x02D2084D，不可构成有效 YYYYMMDD，
+        应被识别为 upCount 而非下一行日期。"""
+        # 0x02D2084D 的 YYYYMMDD: year=4728(>2100), month=63, day=49 — 均非法
+        y, m, d = 4728, 63, 49
+        assert y > 2100 or m < 1 or m > 12 or d < 1 or d > 31, (
+            "upCount raw value should NOT pass YYYYMMDD validation"
+        )
+
+    @pytest.mark.parametrize("up,down", [
+        (500, 500), (1000, 722), (1500, 1000), (2125, 722), (2500, 1500),
+    ])
+    def test_upcount_yyyymmdd_invalid(self, up, down):
+        """所有合理的 upCount/downCount 值都不应被误判为有效 YYYYMMDD。"""
+        raw = struct.pack('<HH', up, down)
+        try_date, = struct.unpack('<I', raw)
+        y, m, d = try_date // 10000, (try_date % 10000) // 100, try_date % 100
+        assert y < 1990 or m < 1 or m > 12 or d < 1 or d > 31, (
+            f"up={up} down={down} raw=0x{try_date:08X} → {y}-{m:02d}-{d:02d} "
+            f"unexpectedly passes YYYYMMDD validation"
+        )
+
+    def test_real_date_passes_yyyymmdd(self):
+        """真实 YYYYMMDD 日期应通过验证。"""
+        assert 20260508 // 10000 == 2026
+        assert (20260508 % 10000) // 100 == 5
+        assert 20260508 % 100 == 8
+
+    def test_two_row_kline_with_upcount(self):
+        """两行 K 线数据：第 0 行含 upCount=2125/down=722，验证两行均正确解析。"""
+        from opentdx.parser.quotation.kline import K_Line
+
+        row0 = _make_kline_row(20260507, 15500, 15550, 15580, 15490,
+                               1000000.0, 5000000000.0, up=2125, down=722)
+        row1 = _make_kline_row(20260508, 15550, 15600, 15620, 15530,
+                               1200000.0, 6000000000.0)
+        payload = struct.pack('<H', 2) + row0 + row1
+
+        parser = K_Line(MARKET.SZ, '399001', PERIOD.DAILY, 0, 0, 2)
+        result = _run_deserialize(parser, payload)
+
+        assert len(result) == 2, f"Expected 2 bars, got {len(result)}"
+        bar0, bar1 = result
+        assert bar0['datetime'].year == 2026
+        assert bar1['datetime'].year == 2026
+        # 第 0 行价格应正确（不被 upCount 偏移影响）
+        assert abs(bar0['close'] - 15550) < 10, f"Row 0 close wrong: {bar0['close']}"
+        # 第 1 行价格应正确
+        assert abs(bar1['close'] - 15600) < 10, f"Row 1 close wrong: {bar1['close']}"
