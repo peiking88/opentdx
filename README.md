@@ -199,3 +199,11 @@ opentdx doc    # 交互式API演示
  tests/test_mock_client.py                     | 370 --------------------------
  tests/{test_parser_mock.py => test_parser.py} |   6 +-
 ```
+
+### 2026-05-10 13:42:29
+```
+ pyproject.toml                     |  2 +-
+ summary.md                         |  7 +++---
+ tests/test_mac_quotation_client.py | 45 ++++++++++++++++++++++----------------
+ 3 files changed, 31 insertions(+), 23 deletions(-)
+```
