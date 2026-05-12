@@ -177,8 +177,33 @@ class TestAdjustmentFactorCrawler:
         result = AdjustmentFactorCrawler.compute_full_factor(events, pre_close_prices, adjust=ADJUST.QFQ)
         assert len(result) == 1
         assert "factor" in result[0]
-        # QFQ: (10 - 0.5 + 0) / (10 + 0.5 + 0) = 9.5 / 10.5
-        expected = 9.5 / 10.5
+        # QFQ 配合 merge_asof(backward)：事件日自身不重复乘本次事件因子
+        expected = 1.0
+        assert abs(result[0]["factor"] - expected) < 0.0001
+
+    def test_compute_full_factor_tdx_per_ten_share_fields(self):
+        """测试 TDX 每 10 股字段换算为每股后参与复权计算"""
+        events = [
+            {
+                "market": 1, "code": "600519", "date": "2024-12-20",
+                "name": "除权除息",
+                "fenhong": 1.0, "peigujia": None,
+                "songzhuangu": 0.0, "peigu": None,
+            },
+            {
+                "market": 1, "code": "600519", "date": "2025-06-26",
+                "name": "除权除息",
+                "fenhong": 276.730011, "peigujia": None,
+                "songzhuangu": 0.0, "peigu": None,
+            },
+        ]
+        pre_close_prices = {
+            "2024-12-20": 1500.0,
+            "2025-06-26": 1435.86,
+        }
+
+        result = AdjustmentFactorCrawler.compute_full_factor(events, pre_close_prices, adjust=ADJUST.QFQ)
+        expected = (1435.86 - 27.6730011) / 1435.86
         assert abs(result[0]["factor"] - expected) < 0.0001
 
     def test_compute_full_factor_hfq(self):
@@ -213,8 +238,8 @@ class TestAdjustmentFactorCrawler:
 
         result = AdjustmentFactorCrawler.compute_full_factor(events, pre_close_prices, adjust=ADJUST.QFQ)
         assert len(result) == 1
-        # QFQ: (12 - 0.3 + 8*0.3) / (12 + 0 + 0.3) = (12 - 0.3 + 2.4) / 12.3 = 14.1 / 12.3
-        expected = (12.0 - 0.3 + 8.0 * 0.3) / (12.0 + 0.3)
+        # QFQ 配合 merge_asof(backward)：事件日自身不重复乘本次事件因子
+        expected = 1.0
         assert abs(result[0]["factor"] - expected) < 0.0001
 
     def test_no_client_initialization(self):

@@ -171,10 +171,10 @@ class AdjustmentFactorCrawler:
         for evt in sorted_events:
             entry = dict(evt)
             category = evt.get("name", evt.get("category", 1))
-            fenhong = evt.get("fenhong") or 0.0
+            fenhong = _per_share(evt.get("fenhong") or 0.0)
             peigujia = evt.get("peigujia") or 0.0
-            songzhuangu = evt.get("songzhuangu") or 0.0
-            peigu = evt.get("peigu") or 0.0
+            songzhuangu = _per_share(evt.get("songzhuangu") or 0.0)
+            peigu = _per_share(evt.get("peigu") or 0.0)
 
             if category == "除权除息" or category == 1:
                 # 除权除息比例（不含 pre_close 部分）
@@ -213,10 +213,10 @@ class AdjustmentFactorCrawler:
         for evt in sorted_events:
             entry = dict(evt)
             category = evt.get("name", evt.get("category", 1))
-            fenhong = evt.get("fenhong") or 0.0
+            fenhong = _per_share(evt.get("fenhong") or 0.0)
             peigujia = evt.get("peigujia") or 0.0
-            songzhuangu = evt.get("songzhuangu") or 0.0
-            peigu = evt.get("peigu") or 0.0
+            songzhuangu = _per_share(evt.get("songzhuangu") or 0.0)
+            peigu = _per_share(evt.get("peigu") or 0.0)
 
             if category == "除权除息" or category == 1:
                 entry["hfq_numer_add"] = songzhuangu + peigu
@@ -259,10 +259,10 @@ class AdjustmentFactorCrawler:
                 results.append(entry)
                 continue
 
-            fenhong = evt.get("fenhong") or 0.0
+            fenhong = _per_share(evt.get("fenhong") or 0.0)
             peigujia = evt.get("peigujia") or 0.0
-            songzhuangu = evt.get("songzhuangu") or 0.0
-            peigu = evt.get("peigu") or 0.0
+            songzhuangu = _per_share(evt.get("songzhuangu") or 0.0)
+            peigu = _per_share(evt.get("peigu") or 0.0)
             category = evt.get("name", evt.get("category", 1))
 
             if category == "除权除息" or category == 1:
@@ -279,13 +279,21 @@ class AdjustmentFactorCrawler:
                 event_factor = 1.0
 
             cumulative_factor *= event_factor
-            entry["factor"] = cumulative_factor
+            # QFQ: 因子代表该事件之后的累积调整，不含自身 event_factor
+            # 因为 merge_asof(backward) 让该日期之前的行拿到此因子
+            # 而原始价在除权日已经反映了除权，不应重复乘
+            entry["factor"] = cumulative_factor if adjust != ADJUST.QFQ else cumulative_factor / event_factor if event_factor != 0 else cumulative_factor
             results.append(entry)
 
         if adjust == ADJUST.QFQ:
             results.reverse()
 
         return results
+
+
+def _per_share(value):
+    """兼容 TDX 每 10 股字段和测试中的每股字段。"""
+    return value / 10 if value >= 1 else value
 
 
 def _parse_event_date(event):
