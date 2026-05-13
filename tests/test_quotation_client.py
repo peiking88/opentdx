@@ -24,7 +24,8 @@ class TestQuotationClientLogin:
 
     def test_heartbeat(self, qc):
         result = qc.doHeartBeat()
-        assert result is not None
+        assert isinstance(result, int), f"心跳应返回日期整数，实际类型: {type(result)}"
+        assert result > 20000101, f"心跳日期应 > 20000101，实际: {result}"
 
     def test_download_file(self, qc):
         result = qc.download_file('gpcw2026.zip', filesize=100)

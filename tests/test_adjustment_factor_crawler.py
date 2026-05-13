@@ -255,14 +255,17 @@ class TestAdjustmentFactorCrawler:
         assert results == {}
 
     def test_read_mock_xdxr(self):
-        """测试 mock XDXR 数据流程"""
-        # Mock client
+        """测试 _normalize_events 能正确转换原始 XDXR 数据：
+        bytes code → str code, MARKET 枚举 → int, datetime → 日期字符串"""
+        from datetime import datetime
+
+        # 模拟服务器返回的原始格式（code 为 bytes，market 为枚举，date 为 datetime）
         mock_client = MagicMock()
         mock_client.call.return_value = [
             {
                 "market": MARKET.SZ,
                 "code": b"000001\x00",
-                "date": "2026-05-01",
+                "date": datetime(2026, 5, 1),
                 "name": "除权除息",
                 "fenhong": 0.5,
                 "peigujia": None,
@@ -282,8 +285,11 @@ class TestAdjustmentFactorCrawler:
             crawler = AdjustmentFactorCrawler(client=mock_client, output_dir=tmpdir)
             result = crawler.fetch_adjustment_factors(MARKET.SZ, "000001")
             assert len(result) == 1
-            assert result[0]["code"] == "000001"
-            assert result[0]["fenhong"] == 0.5
+            # _normalize_events 应完成转换
+            assert result[0]["code"] == "000001"       # bytes → str
+            assert result[0]["market"] == MARKET.SZ.value  # enum → int
+            assert result[0]["date"] == "2026-05-01"   # datetime → str
+        # 注意：fenhong 等字段是纯 pass-through，此处不做冗余断言
 
     def test_save_json_with_default_filename(self):
         """测试使用默认文件名的 JSON 保存"""

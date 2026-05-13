@@ -25,12 +25,15 @@ def _run_deserialize(parser: BaseParser, payload: bytes) -> object:
 
 class TestF23F6:
     def test_deserialize(self):
+        """F23F6 目前仅记录日志后返回 None（解析器尚未完成实现）。
+        测试验证输入数据不会导致崩溃，且返回值符合当前契约。"""
         from opentdx.parser.ex_quotation.goods import F23F6
         count = 2
         data = struct.pack('<IH', 0, count)
         for _ in range(count):
             data += struct.pack('<B8sB12H', 0, b'TST\x00\x00\x00\x00\x00', 0, *([0] * 12))
         result = _run_deserialize(F23F6(), data)
+        # 当前实现始终返回 None，确认不会崩溃
         assert result is None
 
 
@@ -842,25 +845,29 @@ class TestKLineUpCountDetection:
     """验证 upCount/downCount 智能检测不会将 upCount 小整数误判为日期。"""
 
     def test_upcount_not_mistaken_for_date(self):
-        """upCount 值 2125/722 编码为 0x02D2084D，不可构成有效 YYYYMMDD，
-        应被识别为 upCount 而非下一行日期。"""
-        # 0x02D2084D 的 YYYYMMDD: year=4728(>2100), month=63, day=49 — 均非法
-        y, m, d = 4728, 63, 49
-        assert y > 2100 or m < 1 or m > 12 or d < 1 or d > 31, (
-            "upCount raw value should NOT pass YYYYMMDD validation"
+        """upCount=2125/down=722 编码为 0x02D2084D，不可构成有效日期。"""
+        raw = struct.pack('<HH', 2125, 722)
+        try_date, = struct.unpack('<I', raw)
+        y, m, d = try_date // 10000, (try_date % 10000) // 100, try_date % 100
+        # 验证不符合有效日历日期（月份须在 1-12，日期须在 1-31）
+        assert not (1 <= m <= 12 and 1 <= d <= 31), (
+            f"raw=0x{try_date:08X} → {y}-{m:02d}-{d:02d} 不应是有效日期"
         )
 
     @pytest.mark.parametrize("up,down", [
         (500, 500), (1000, 722), (1500, 1000), (2125, 722), (2500, 1500),
     ])
     def test_upcount_yyyymmdd_invalid(self, up, down):
-        """所有合理的 upCount/downCount 值都不应被误判为有效 YYYYMMDD。"""
+        """所有合理的 upCount/downCount 值编码后均无法构成有效 YYYYMMDD 日期。"""
         raw = struct.pack('<HH', up, down)
         try_date, = struct.unpack('<I', raw)
         y, m, d = try_date // 10000, (try_date % 10000) // 100, try_date % 100
-        assert y < 1990 or m < 1 or m > 12 or d < 1 or d > 31, (
+        # 有效日期须满足: 月∈[1,12] 且 日∈[1,31]
+        has_valid_month = 1 <= m <= 12
+        has_valid_day = 1 <= d <= 31
+        assert not (has_valid_month and has_valid_day), (
             f"up={up} down={down} raw=0x{try_date:08X} → {y}-{m:02d}-{d:02d} "
-            f"unexpectedly passes YYYYMMDD validation"
+            f"意外通过了日期有效性检查"
         )
 
     def test_real_date_passes_yyyymmdd(self):

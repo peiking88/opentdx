@@ -7,7 +7,7 @@ from datetime import date, datetime, time
 import pytest
 
 from opentdx.const import MARKET, EX_MARKET, PERIOD
-from opentdx.exceptions import ValidationException
+from opentdx.exceptions import ValidationException, TdxConnectionError, TdxFunctionCallError
 from opentdx.client.quotationClient import QuotationClient
 from opentdx.client.exQuotationClient import exQuotationClient
 
@@ -26,11 +26,41 @@ class TestErrorPaths:
         client = QuotationClient()
         client.connected = False
         client.raise_exception = True
-        try:
+        with pytest.raises((TdxConnectionError, TdxFunctionCallError)):
             client.get_count(MARKET.SZ)
-            assert False, "Should have raised"
-        except Exception:
-            pass
+
+    def test_disconnect_then_call_returns_none(self):
+        """disconnect() 后再调用 API，raise_exception=False 应返回 None"""
+        client = QuotationClient()
+        client.raise_exception = False
+        client.disconnect()
+        result = client.get_count(MARKET.SZ)
+        assert result is None
+
+    def test_disconnect_then_call_raises(self):
+        """disconnect() 后再调用 API，raise_exception=True 应抛出异常"""
+        client = QuotationClient()
+        client.raise_exception = True
+        client.disconnect()
+        with pytest.raises((TdxConnectionError, TdxFunctionCallError)):
+            client.get_count(MARKET.SZ)
+
+    def test_ex_client_disconnect_then_call_returns_none(self):
+        """扩展行情客户端 disconnect() 后 API 应返回 None"""
+        client = exQuotationClient()
+        client.raise_exception = False
+        client.disconnect()
+        result = client.get_count()
+        assert result is None
+
+    def test_call_parse_failure_raises(self):
+        """mock send 返回有效数据但解析失败，raise_exception=True 应抛 TdxFunctionCallError"""
+        client = QuotationClient()
+        client.connected = True
+        client.raise_exception = True
+        client.send = lambda data: b'\x00' * 20
+        with pytest.raises(TdxFunctionCallError):
+            client.get_count(MARKET.SZ)
 
     def test_sp_mode_not_enabled(self):
         from opentdx.client.macQuotationClient import macQuotationClient

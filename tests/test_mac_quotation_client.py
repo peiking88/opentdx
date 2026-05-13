@@ -45,8 +45,8 @@ class TestMacQuotationClientStock:
         assert result is not None
         
         df = pd.DataFrame(result)
-        if 'name' not in df.columns:  # 正确的检查列是否存在的方式
-            assert "未找到 [主力监控] 功能 的 name 字段"
+        if 'name' not in df.columns:
+            pytest.fail("未找到 [主力监控] 功能 的 name 字段")
 
     def test_equal_market_monitor(self, mqc:macQuotationClient, qc):
         """验证 MAC 协议与标准协议获取市场异动数据时的结构一致性。
@@ -211,7 +211,9 @@ class TestMacQuotationClientBoard:
 
     def test_get_board_list_ex_board_type(self, mqc):
         result = mqc.get_board_list(EX_BOARD_TYPE.HK_ALL, count=5)
-        assert result is None or isinstance(result, list)
+        # 使用 mqc（非扩展客户端）查询扩展板类型，可能返回 None 或空列表
+        if result is not None:
+            assert isinstance(result, list), f"非 None 时应为列表，实际: {type(result)}"
 
 
 class TestMacQuotationClientBoardFields:
@@ -404,33 +406,32 @@ class TestMacQuotationClientTickChart:
         assert isinstance(result['chart_data'], list), "chart_data应为列表"
 
     def test_get_symbol_tick_chart_invalid_date(self, mqc):
-        """测试无效日期的处理"""
+        """测试无效日期的处理 — 未来日期应返回空分时数据"""
         from datetime import date
-        
-        # 测试未来日期（应该返回空数据或特定错误）
+
         future_date = date(2030, 12, 31)
         result = mqc.get_symbol_tick_chart(MARKET.SZ, '000001', future_date)
-        
-        # 验证返回类型仍然正确
+
         assert isinstance(result, dict), "即使日期无效，也应返回字典类型"
-        
-        # 未来日期可能返回空数据或部分字段为空
-        # 这里主要验证不会抛出异常
         assert result is not None, "返回值不应为None"
+        assert 'chart_data' in result, "返回值缺少 chart_data 字段"
+        # 未来日期不应有任何分时数据
+        assert len(result['chart_data']) == 0, (
+            f"未来日期 {future_date} 应返回空 chart_data，实际返回 {len(result['chart_data'])} 条")
 
     def test_get_symbol_tick_chart_weekend_date(self, mqc):
-        """测试周末日期的处理"""
+        """测试周末日期的处理 — 非交易日应返回空分时数据"""
         from datetime import date
-        
+
         # 2024-01-13 是星期六
         weekend_date = date(2024, 1, 13)
         result = mqc.get_symbol_tick_chart(MARKET.SH, '600000', weekend_date)
-        
-        # 验证返回类型
+
         assert isinstance(result, dict), "周末日期查询应返回字典类型"
-        
-        # 周末无交易数据，但不应抛出异常
         assert result is not None, "周末查询返回值不应为None"
+        assert 'chart_data' in result, "返回值缺少 chart_data 字段"
+        # 周末非交易日不应有分时数据（服务器可能返回空列表）
+        assert isinstance(result['chart_data'], list), "chart_data 应为列表"
 
     def test_get_symbol_tick_chart_hk_stock(self, meqc):
         """测试港股分时图数据获取"""

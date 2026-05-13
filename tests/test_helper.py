@@ -2,6 +2,7 @@
 import struct
 import pytest
 
+from opentdx.exceptions import ValidationException
 from opentdx.utils.helper import (
     get_price, get_datetime, get_time, get_security_type,
     get_security_coefficient, time_frame, index_bytes,
@@ -34,6 +35,18 @@ class TestGetPrice:
         price, pos = get_price(data, 0)
         assert price == 64
 
+    def test_boundary_eob_single_byte(self):
+        """单字节数据，pos 超出范围应抛 ValidationException"""
+        data = bytearray([0x41])
+        with pytest.raises(ValidationException, match='越界'):
+            get_price(data, 1)
+
+    def test_boundary_eob_multibyte(self):
+        """多字节编码中途越界应抛 ValidationException"""
+        data = bytearray([0x80])  # 0x80 表示还有后续字节但数据已结束
+        with pytest.raises(ValidationException, match='越界'):
+            get_price(data, 0)
+
 
 class TestGetDatetime:
     def test_daily_kline_date(self):
@@ -47,13 +60,23 @@ class TestGetDatetime:
         assert minute == 0
 
     def test_minute_kline_date(self):
-        # 分钟K线: 分类0, 压缩 uint16 (year<<11 | month*100 | day), minutes
-        zip_day = (22 << 11) | (5 * 100) | 6
+        # 分钟K线: 分类0, 压缩 uint16 (year<<11 | month*100+day), minutes
+        # 2026-05-06 → (2026-2004)<<11 | (5*100+6) = 45056 | 506 = 45562
+        zip_day = (22 << 11) | (5 * 100 + 6)
         minutes = 570  # 9:30 = 570 minutes
         buffer = struct.pack("<HH", zip_day, minutes)
         year, month, day, hour, minute, pos = get_datetime(0, buffer, 0)
-        assert isinstance(year, int)
-        assert isinstance(month, int)
+        assert year == 2026
+        assert month == 5
+        assert day == 6
+        assert hour == 9
+        assert minute == 30
+        assert pos == 4
+
+    def test_boundary_eob(self):
+        """buffer 不足 4 字节应抛 ValidationException"""
+        with pytest.raises(ValidationException, match='越界'):
+            get_datetime(4, b'\x00\x00\x00', 0)
 
 
 class TestGetTime:
@@ -64,6 +87,11 @@ class TestGetTime:
         assert hour == 9
         assert minute == 30
         assert pos == 2
+
+    def test_boundary_eob(self):
+        """buffer 不足 2 字节应抛 ValidationException"""
+        with pytest.raises(ValidationException, match='越界'):
+            get_time(b'\x00', 0)
 
 
 class TestGetSecurityType:
@@ -90,6 +118,18 @@ class TestTimeFrame:
     def test_returns_bool(self):
         assert isinstance(time_frame(), bool)
 
+    def test_during_trading_hours(self):
+        """交易时段内（上午 10:00）应返回 True"""
+        from datetime import datetime
+        t = datetime(2026, 5, 13, 10, 0, 0)
+        assert time_frame(t) is True
+
+    def test_outside_trading_hours(self):
+        """非交易时段（晚上 20:00）应返回 False"""
+        from datetime import datetime
+        t = datetime(2026, 5, 13, 20, 0, 0)
+        assert time_frame(t) is False
+
 
 class TestGetSecurityCoefficient:
     def test_a_stock(self):
@@ -100,6 +140,16 @@ class TestGetSecurityCoefficient:
         coef = get_security_coefficient(1, "999999")
         assert coef == 0.01
 
+    def test_b_stock(self):
+        """B 股系数应为 0.001"""
+        coef = get_security_coefficient(1, "900001")
+        assert coef == 0.001
+
+    def test_bond(self):
+        """债券系数应为 0.0001"""
+        coef = get_security_coefficient(1, "010001")
+        assert coef == 0.0001
+
 
 class TestIndexBytes:
     def test_basic(self):
@@ -108,13 +158,20 @@ class TestIndexBytes:
 
 class TestGetVolume:
     def test_returns_number(self):
-        # get_volume 接收uint32，返回浮点数
+        # get_volume(0): logpoint=0, all mantissa bytes=0 → result ≈ 0
         result = get_volume(0)
         assert isinstance(result, float)
+        assert result == pytest.approx(0.0, abs=1e-6)
 
     def test_non_zero(self):
-        # 用典型的成交量值测试
+        # 用典型的成交量值测试，验证结果为正浮点数
         result = get_volume(1000000)
+        assert isinstance(result, float)
+        assert result > 0
+
+    def test_volume_max_uint32(self):
+        # 边界值：最大 uint32 不应崩溃，返回有效浮点数
+        result = get_volume(0xFFFFFFFF)
         assert isinstance(result, float)
         assert result > 0
 

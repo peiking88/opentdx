@@ -15,7 +15,10 @@ class TestExQuotationClientLogin:
 
     def test_server_info(self, eqc):
         result = eqc.server_info()
-        assert result is not None
+        assert isinstance(result, dict), "服务端信息应返回字典"
+        assert 'name' in result, "缺少 name (服务器名称) 字段"
+        assert len(result['name']) > 0, "服务器名称不应为空"
+        assert 'version' in result, "缺少 version 字段"
 
 
 class TestExQuotationClientData:
