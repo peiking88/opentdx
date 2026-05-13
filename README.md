@@ -207,3 +207,17 @@ opentdx doc    # 交互式API演示
  tests/test_mac_quotation_client.py | 45 ++++++++++++++++++++++----------------
  3 files changed, 31 insertions(+), 23 deletions(-)
 ```
+
+### 2026-05-13 14:51:03
+```
+ pyproject.toml                          |  2 +-
+ summary.md                              | 36 +++++++++++++++--
+ tests/test_adjustment_factor_crawler.py | 16 +++++---
+ tests/test_error_paths.py               | 40 ++++++++++++++++---
+ tests/test_ex_quotation_client.py       |  5 ++-
+ tests/test_helper.py                    | 69 ++++++++++++++++++++++++++++++---
+ tests/test_mac_quotation_client.py      | 35 +++++++++--------
+ tests/test_parser.py                    | 25 +++++++-----
+ tests/test_quotation_client.py          |  3 +-
+ 9 files changed, 182 insertions(+), 49 deletions(-)
+```
