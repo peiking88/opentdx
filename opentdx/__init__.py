@@ -1,3 +1,5 @@
+__version__ = "0.5.10"
+
 from .tdxClient import TdxClient
 from .client.quotationClient import QuotationClient
 from .client.exQuotationClient import exQuotationClient
@@ -29,6 +31,7 @@ from .const import (
 )
 
 __all__ = [
+    "__version__",
     "TdxClient",
     "QuotationClient",
     "exQuotationClient",

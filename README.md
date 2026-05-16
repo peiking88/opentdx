@@ -208,6 +208,14 @@ opentdx doc    # 交互式API演示
  3 files changed, 31 insertions(+), 23 deletions(-)
 ```
 
+### 2026-05-16
+```
+ opentdx/__init__.py |  2 ++
+ summary.md          |  4 ++--
+ README.md           |  7 +++++++
+ 3 files changed, 11 insertions(+), 2 deletions(-)
+```
+
 ### 2026-05-13 14:51:03
 ```
  pyproject.toml                          |  2 +-
