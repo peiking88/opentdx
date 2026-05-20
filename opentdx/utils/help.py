@@ -135,6 +135,10 @@ def lot_size_to_symbol(lotsize:str) -> str:
 
 #### XXX: 分析了一下，貌似是类似utf-8的编码方式保存有符号数字
 def get_price(data, pos):
+    data_len = len(data)
+    if pos >= data_len:
+        return 0, pos + 1
+
     pos_byte = 6
     bdata = data[pos]
     int_data = bdata & 0x3f
@@ -146,6 +150,8 @@ def get_price(data, pos):
     if bdata & 0x80:
         while True:
             pos += 1
+            if pos >= data_len:
+                break
             bdata = data[pos]
             int_data += (bdata & 0x7f) << pos_byte
             pos_byte += 7
