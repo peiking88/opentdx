@@ -35,7 +35,7 @@ class Transaction(BaseParser):
                 'price': last_price,
                 'vol': vol,
                 'trans': trans,
-                'action': ['BUY', 'SELL', 'NEUTRAL'][buy_sell],
+                'action': {0: 'BUY', 1: 'SELL', 2: 'NEUTRAL'}.get(buy_sell, 'NEUTRAL'),
                 'unknown': unknown,
             })
 

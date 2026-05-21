@@ -37,6 +37,6 @@ class HistoryTransactionWithTrans(BaseParser):
                 'price': last_price,
                 'vol': vol,
                 'num': num,
-                'action': ['BUY', 'SELL', 'NEUTRAL'][buy_sell],
+                'action': {0: 'BUY', 1: 'SELL', 2: 'NEUTRAL'}.get(buy_sell, 'NEUTRAL'),
             })
         return result

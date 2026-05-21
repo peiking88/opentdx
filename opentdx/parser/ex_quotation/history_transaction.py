@@ -29,7 +29,7 @@ class HistoryTransaction(BaseParser):
                 'time': time(minutes // 60 % 24, minutes % 60),
                 'price': price,
                 'vol': vol,
-                'action': ['BUY', 'SELL', 'NEUTRAL'][buy_sell]
+                'action': {0: 'BUY', 1: 'SELL', 2: 'NEUTRAL'}.get(buy_sell, 'NEUTRAL')
             })
 
         return results
