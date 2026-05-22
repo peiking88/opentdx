@@ -1,4 +1,4 @@
-__version__ = "0.5.12"
+__version__ = "0.5.13"
 
 from .tdxClient import TdxClient
 from .client.quotationClient import QuotationClient
